@@ -6,7 +6,7 @@ inputs:
     required: true
   artifacts-bucket-cmk:
     description: 'Indicates if this is a stack or stackset deployment'
-    required: true
+    required: false
   environment:
     description: 'Name of the target environment used for deployment operations'
     required: true
@@ -75,7 +75,8 @@ runs:
       run: |
         S3_PACKAGE_KEY="${{ inputs.package-folder }}/lambda-packages/${{ steps.create_lambda_package.outputs.package_name }}"
         cd ${{ inputs.function-path }}/${{ inputs.function-name }}
-        aws s3 cp ${{ steps.create_lambda_package.outputs.package_name }} s3://${{ inputs.artifacts-bucket }}/$S3_PACKAGE_KEY --sse "aws:kms" --sse-kms-key-id ${{ inputs.artifacts-bucket-cmk }}
+        aws s3 cp ${{ steps.create_lambda_package.outputs.package_name }} s3://${{ inputs.artifacts-bucket }}/$S3_PACKAGE_KEY 
+        # --sse "aws:kms" --sse-kms-key-id ${{ inputs.artifacts-bucket-cmk }}
         echo "package_key=$S3_PACKAGE_KEY" >> $GITHUB_OUTPUT
       shell: bash
     

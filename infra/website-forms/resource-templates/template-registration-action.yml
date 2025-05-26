@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: DynamoDb Table and Lambda Function to handle website form submissions
+
+Parameters:
+  DeploymentBucket:
+    Type: String
+    Description: S3 bucket name for deployment assets.
+  LambdaFunctionPackageKey:
+    Type: String
+    Description: S3 key for the Lambda function package.
+  SenderEmail:
+    Type: String
+    Description: Verified SES email address 
+  Env:
+    Type: String
+    Description: Environment
+    Default: prod
+  NamePrefix:
+    Type: String
+    Description: Name prefix for all resources
+  LambdaRegistrationFunctionName:
+    Type: String
+    Description: The name of the Lambda function
+  LambdaRegistrationExecutionRoleName:
+    Type: String
+    Description: The name of the Lambda execution role
+  SNSTopicName:
+    Type: String
+    Description: SNS Topic name
+  TagCostCenter:
+    Description: Value to use for the cost-center tag.
+    Type: String
+  TagOwner:
+    Description: Name of the owner of this component.
+    Type: String
+  TagOwnerEmail:
+    Description: Email of the owner of this component.
+    Type: String
+  Version:
+    Description: Value to use for the version tag, using a "major.minor" notation.
+    Type: String
+
+
+Resources: 
+  RegistrationTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: RegistrationTable
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  RegistrationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: RegistrationTopic
+
+  SESIdentity:
+    Type: AWS::SES::EmailIdentity
+    Properties:
+      EmailIdentity: !Ref SenderEmail
+
+  ## 5) Lambda Function
+  RegistrationFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Ref DeploymentBucket
+        S3Key: !Ref LambdaFunctionPackageKey
+      Handler: app.jamboree_register.lambda_handler
+      FunctionName: !Ref LambdaRegistrationFunctionName
+      Runtime: python3.12
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/${LambdaRegistrationExecutionRoleName}"
+      Timeout: 30
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref RegistrationTable
+          SNS_TOPIC_ARN: !Ref RegistrationTopic
+          SES_SOURCE_EMAIL: !Ref SenderEmail
+      
+
+  LambdaDynamoExecutionPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${NamePrefix}-LambdaDynamoExecutionPolicy
+      Roles: 
+       - !Ref LambdaRegistrationExecutionRoleName
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        -
+            Effect: Allow
+            Action:
+              - dynamodb:PutItem
+            Resource: !GetAtt RegistrationTable.Arn
+        - 
+            Effect: Allow
+            Action:
+              - sns:Publish
+            Resource: !Ref RegistrationTopic
+        - 
+            Effect: Allow
+            Action:
+              - ses:SendEmail
+              - ses:SendRawEmail
+            Resource: !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/${SenderEmail}
