@@ -1,0 +1,47 @@
+name: 'Cfn Package'
+description: 'Packages a CloudFormation Template and uploads to S3'
+
+inputs:
+  component-name:
+    description: 'Name of the logical component represented by the CloudFormation template'
+    required: true
+  packaged-file-name:
+    description: 'Name of the packaged CloudFormation file'
+    required: true
+  path-to-cfn-file:
+    description: 'Relative path to CloudFormation file to package'
+    required: true
+  s3-bucket:
+    description: 'Name of S3 bucket to store packaged files'
+    required: true
+  s3-bucket-cmk:
+    description: 'Id of the KMS CMK for encryption'
+    required: false
+  s3-prefix:
+    description: 'Path within an S3 bucket to store packaged files'
+    required: false
+
+outputs:
+  template-url-path:
+    description: "Path suffix of S3 HTTPS URL for the packaged CloudFormation Template"
+    value: ${{ steps.upload.outputs.template-s3-suffix }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: package
+      name: Package
+      run: aws cloudformation package --template-file ${{ inputs.path-to-cfn-file }} --s3-bucket ${{ inputs.s3-bucket }} --s3-prefix ${{ inputs.s3-prefix }}/${{ inputs.component-name }} --output-template-file ${{ inputs.packaged-file-name }}
+      # --kms-key-id ${{ inputs.s3-bucket-cmk }}
+      shell: bash
+    - id: upload
+      name: Upload
+      run: |
+        TEMP_PKG_FILE=${{ inputs.s3-prefix }}/${{ inputs.component-name }}/packaged-template-${{ github.run_id }}.yml
+        TEMP_S3_PATH=s3://${{ inputs.s3-bucket }}/$TEMP_PKG_FILE
+        echo S3 destination = $TEMP_S3_PATH
+        aws s3 cp ${{ inputs.packaged-file-name }} $TEMP_S3_PATH 
+        # --sse "aws:kms" --sse-kms-key-id ${{ inputs.s3-bucket-cmk }}
+        # echo "::set-output name=template-s3-suffix::$TEMP_PKG_FILE"
+        echo "template-s3-suffix=$TEMP_PKG_FILE" >> $GITHUB_OUTPUT
+      shell: bash

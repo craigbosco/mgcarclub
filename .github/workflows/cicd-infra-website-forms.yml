@@ -1,0 +1,49 @@
+name: website-forms
+
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  push:
+    branches: [ main ]
+    paths:
+      - 'infra/website-forms/**'
+      - '!**/*.md'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'infra/website-forms/**'
+      - '!**/*.md'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  qa-checks:
+    name: Quality Checks
+    uses: ./.github/workflows/qa-cfn.yml
+    with:
+      aws-region: us-east-1
+      base-path: './infra'
+      environment: prod
+      kind: local
+      name: website-forms
+    secrets:
+      gh-iam-role: ${{ secrets.GH_IAM_ROLE }}
+
+  deploy:
+    name: Deploy Component
+    needs: qa-checks
+    if: ${{ contains(fromJSON('["push", "workflow_dispatch"]'), github.event_name) && github.ref == 'refs/heads/main' }}
+    uses: ./.github/workflows/deploy-cfn.yml
+    with:
+      aws-region: us-east-1
+      base-path: './infra'
+      component-name: website-forms
+      config-file: 'stack-config.yml'
+      deployment-type: stack
+      environment: prod
+      params-file: params-prod.json
+      stack-or-stackset-name: mgcarclub-website-forms
+    secrets:
+      gh-artifacts-bucket: ${{ secrets.GH_ACTIONS_BUCKET }}
+      # gh-artifacts-bucket-cmk: ${{ secrets.GH_ACTIONS_BUCKET_CMK }}
+      gh-iam-role: ${{ secrets.GH_IAM_ROLE }}

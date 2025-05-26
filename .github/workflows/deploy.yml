@@ -1,0 +1,43 @@
+name: Deploy Code to Production
+
+on: 
+  push:
+    branches: [ main ]
+    paths:
+      - 'aws/**'
+      - 'Data-Pipeline/**'
+      - '!**/*.md'
+    # paths-ignore:
+    #   - '.github/**'
+    #   - 'infra/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    environment: prod
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+      
+      - name: Setup AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: ${{ secrets.GH_IAM_ROLE }}
+          role-session-name: GitHubActionsSession-${{ github.run_id }}
+          role-duration-seconds: 900
+          aws-region: us-west-2
+
+      - name: Submit code to S3
+        if: success()
+        run: |
+          aws s3 cp ./aws/bosco_data_pipeline s3://sagemaker-bosco-data-pipeline-west/resources --recursive
+          aws s3 cp ./aws/bosco_maint_workload s3://sagemaker-bosco-data-pipeline-west/maint --recursive
+          aws s3 sync ./aws/jobs s3://sagemaker-bosco-data-pipeline-west/jobs --delete
+          aws s3 cp ./aws/functions s3://sagemaker-bosco-data-pipeline-west/functions --recursive
+          aws s3 cp ./Data-Pipeline s3://sagemaker-bosco-data-pipeline-west/resources/analytics_queries/ --recursive
+          aws s3 sync ./aws/cloudformation s3://sagemaker-bosco-data-pipeline-west/code/aws/cloudformation --delete
+
+          aws s3 sync ./aws/jobs s3://${{ secrets.GH_ACTIONS_BUCKET }}/Analytics-Projects/aws/jobs --delete --sse "aws:kms" --sse-kms-key-id ${{ secrets.GH_ACTIONS_BUCKET_CMK }}

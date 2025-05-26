@@ -1,0 +1,52 @@
+name: 'Cfn Deploy'
+description: 'Deploys a CloudFormation Template from an S3 location'
+inputs:
+  component-path:
+    description: 'Name of the logical component represented by the CloudFormation template'
+    required: true
+  config-file-name:
+    description: 'Name of the stack or stackset cli input config file'
+    required: true
+  deployment-type:
+    description: 'Indicates if this is a stack or stackset deployment'
+    required: true
+  instances-config-file-name:
+    default: ''
+    description: 'Name of the stackset instances config file'
+    required: false
+  param-file-name:
+    description: 'Name of the template parameter file'
+    required: true
+  stack-or-stackset-name:
+    description: 'Name of the stack or stackset to deploy'
+    required: true
+  template-url:
+    description: 'Full S3 path to the packaged CloudFormation template'
+    required: false
+    
+runs:
+  using: "composite"
+  steps:
+    - id: deploy-stack
+      name: Deploy Stack
+      if: ${{ inputs.deployment-type == 'stack' }}
+      run: ./.github/scripts/deploy-stack.sh
+      shell: bash
+      env:
+        INPUT_COMPONENT_PATH: ${{ inputs.component-path }}
+        INPUT_CONFIG_FILE_NAME: ${{ inputs.config-file-name }}
+        INPUT_PARAM_FILE_NAME: ${{ inputs.param-file-name }}
+        INPUT_STACK_OR_STACKSET_NAME: ${{ inputs.stack-or-stackset-name }}
+        INPUT_TEMPLATE_URL: ${{ inputs.template-url }}
+    - id: deploy-stackset
+      name: Deploy Stackset
+      if: ${{ inputs.deployment-type == 'stackset' }}
+      run: ./.github/scripts/deploy-stackset.sh
+      shell: bash
+      env:
+        INPUT_COMPONENT_PATH: ${{ inputs.component-path }}
+        INPUT_INSTANCES_CONFIG_FILE_NAME: ${{ inputs.instances-config-file-name }}
+        INPUT_PARAM_FILE_NAME: ${{ inputs.param-file-name }}
+        INPUT_STACK_OR_STACKSET_NAME: ${{ inputs.stack-or-stackset-name }}
+        INPUT_STACKSET_CONFIG_FILE_NAME : ${{ inputs.config-file-name }}
+        INPUT_TEMPLATE_URL: ${{ inputs.template-url }}

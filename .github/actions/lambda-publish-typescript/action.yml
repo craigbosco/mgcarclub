@@ -1,0 +1,71 @@
+name: 'Lambda Publish Package - Typescript'
+description: 'Publishes a Typescript Lambda Zip Package to an S3 location'
+inputs:
+  artifacts-bucket:
+    description: 'Indicates if this is a stack or stackset deployment'
+    required: true
+  artifacts-bucket-cmk:
+    description: 'Indicates if this is a stack or stackset deployment'
+    required: true
+  environment:
+    description: 'Name of the target environment used for deployment operations'
+    required: true
+  function-path:
+    description: 'Name of the logical component represented by the CloudFormation template'
+    required: true
+  function-name:
+    description: 'Name of the stack or stackset cli input config file'
+    required: true
+  function-namespace:
+    description: 'Name of the stack or stackset cli input config file'
+    required: true
+  node-version:
+    description: 'Verion of NodeJS used for building the Typescript package'
+    required: true
+  package-folder:
+    default: 'github-actions-packaged'
+    description: 'Logical folder name in S3 where packages are stored'
+    required: false
+    
+runs:
+  using: "composite"
+  steps:
+
+    - id: setup_nodejs
+      name: Setup NodeJS
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - id: install_dependencies_build
+      name: Install dependencies and build
+      run: |
+        cd ${{ inputs.function-path }}/${{ inputs.function-name }}
+        npm install && npm run build
+        ls
+      shell: bash
+  
+    - id: create_lambda_package
+      name: Package Lambda Zip
+      run: |
+        TIMESTAMP=$(date +'%Y%m%d-%H%M%S')
+        PACKAGE_NAME="${{ inputs.function-namespace }}.${{ inputs.function-name }}.${{ inputs.environment }}.$TIMESTAMP.${{ github.sha }}.zip"
+        echo "package_name=$PACKAGE_NAME" >> $GITHUB_OUTPUT
+        echo "package_version=$TIMESTAMP" >> $GITHUB_OUTPUT
+        cd ${{ inputs.function-path }}/${{ inputs.function-name }}
+        zip -qq -r -j ../../../$PACKAGE_NAME ./dist/*
+      shell: bash
+      
+    - id: s3_upload
+      name: Upload to S3 Bucket
+      run: |
+        S3_PACKAGE_KEY="${{ inputs.package-folder }}/lambda-packages/${{ steps.create_lambda_package.outputs.package_name }}"
+        aws s3 cp ${{ steps.create_lambda_package.outputs.package_name }} s3://${{ inputs.artifacts-bucket }}/$S3_PACKAGE_KEY --sse "aws:kms" --sse-kms-key-id ${{ inputs.artifacts-bucket-cmk }}
+        echo "package_key=$S3_PACKAGE_KEY" >> $GITHUB_OUTPUT
+      shell: bash
+    
+    - id: publish_artifact
+      name: Publish to SSM
+      run: |
+        aws ssm put-parameter --name "${{ inputs.function-namespace }}.${{ inputs.function-name }}.${{ inputs.environment }}.package" --value "${{ steps.s3_upload.outputs.package_key }}" --type "String" --overwrite
+      shell: bash

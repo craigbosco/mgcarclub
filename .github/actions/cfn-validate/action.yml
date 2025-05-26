@@ -1,0 +1,42 @@
+name: 'Cfn Validate'
+description: 'Validate CloudFormation Templates via CLI'
+inputs:
+  cfn-template-filename:
+    default: template.yml
+    description: 'Default filename of the parent CloudFormation template'
+    required: true
+  cfn-template-location:
+    default: local
+    description: Indicates location of CloudFormation template being validated, s3 or local
+    required: true
+  cfn-template-path:
+    description: 'Local folder or S3 path to CloudFormation template to validate'
+    required: true
+  
+runs:
+  using: "composite"
+  steps:
+    - name: Validate
+      run: |
+        echo Validating parent template in ${{ inputs.cfn-template-location }}
+        if [[ "${{ inputs.cfn-template-location }}"  == "local" ]]
+        then
+          aws cloudformation validate-template --template-body file://${{ inputs.cfn-template-path }}/${{ inputs.cfn-template-filename }}
+        elif [[ "${{ inputs.cfn-template-location }}"  == "s3" ]]
+        then
+          aws cloudformation validate-template --template-url ${{ inputs.cfn-template-path }}
+        else
+          printf 'Invalid CloudFormation template location\n'
+          exit 1
+        fi
+
+        if [ -d "${{ inputs.cfn-template-path }}/resource-templates" ]
+        then
+          printf 'Discovering nested templates...\n'
+          for file in ${{ inputs.cfn-template-path }}/resource-templates/*
+          do
+            echo Validating nested template: "$file"
+            aws cloudformation validate-template --template-body file://$file
+          done
+        fi
+      shell: bash

@@ -1,0 +1,112 @@
+name: CloudFormation Deploy Stack or StackSet
+
+on:
+  workflow_call:
+    inputs:
+      aws-region:
+        description: 'AWS Region'
+        required: true
+        type: string
+      base-path:
+        required: true
+        type: string
+      component-name:
+        description: 'Name of the logical component represented by the CloudFormation template'
+        required: true
+        type: string
+      deployment-type:
+        required: true
+        type: string
+      config-file:
+        default: 'stack-config.yml'
+        required: true
+        type: string
+      package-folder:
+        default: 'github-actions-packaged'
+        required: false
+        type: string
+      params-file:
+        default: 'params.json'
+        required: false
+        type: string
+      stack-instances-config-file:
+        default: 'stack-instances.yml'
+        required: false
+        type: string
+      stack-or-stackset-name:
+        description: 'Name of the stack or stackset to deploy'
+        required: false
+        type: string
+      environment:
+        required: true
+        type: string
+    outputs:
+      template-s3-url:
+        description: "S3 URL of the packged template"
+        value: ${{ jobs.package.outputs.template-s3-url }}
+    secrets:
+      gh-artifacts-bucket:
+        description: "Name of the S3 bucket in the target account used for packaged templates and build artifacts"
+        required: true
+      gh-artifacts-bucket-cmk:
+        description: "Id of the KMS CMK in the target account used to encrypt packaged templates and build artifacts"
+        required: false
+      gh-iam-role:
+        description: "ARN of the IAM Role used by GitHub to access AWS"
+        required: true
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      template-s3-url: ${{ steps.package-template.outputs.template-url-path }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4.1.0
+        with:
+          aws-region: ${{ inputs.aws-region }}
+          role-to-assume: ${{ secrets.gh-iam-role }}
+          role-session-name: GitHubActionsSession-${{ github.run_id }}
+      - id: package-template
+        name: Package CloudFormation Template
+        uses: ./.github/actions/cfn-package
+        with:
+          component-name: '${{ inputs.component-name }}'
+          packaged-file-name: 'packaged-template-${{ github.run_id }}.yml'
+          path-to-cfn-file: '${{ inputs.base-path }}/${{ inputs.component-name }}/template.yml'
+          s3-bucket: '${{ secrets.gh-artifacts-bucket }}'
+          # s3-bucket-cmk: '${{ secrets.gh-artifacts-bucket-cmk }}'
+          s3-prefix: '${{ inputs.package-folder }}'
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    needs: [package]
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-region: ${{ inputs.aws-region }}
+          role-to-assume: ${{ secrets.gh-iam-role }}
+          role-session-name: GitHubActionsSession-${{ github.run_id }}
+      - id: deploy-template
+        name: Deploy CloudFormation Template
+        uses: ./.github/actions/cfn-deploy
+        with:
+          component-path: '${{ inputs.base-path }}/${{ inputs.component-name }}'
+          config-file-name: '${{ inputs.config-file }}'
+          deployment-type: '${{ inputs.deployment-type }}'
+          instances-config-file-name: '${{ inputs.stack-instances-config-file }}'
+          param-file-name: '${{ inputs.params-file }}'
+          stack-or-stackset-name: '${{ inputs.stack-or-stackset-name }}'
+          template-url: 'https://${{ secrets.gh-artifacts-bucket }}.s3.amazonaws.com/${{ needs.package.outputs.template-s3-url }}'

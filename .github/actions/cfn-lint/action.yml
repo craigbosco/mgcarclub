@@ -1,0 +1,17 @@
+name: 'Cfn Lint'
+description: 'Lint CloudFormation Template'
+inputs:
+  path-to-cfn-files:
+    description: 'Relative path to CloudFormation files to lint'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Setup
+      run: |
+        echo Run: $GITHUB_RUN_ID
+        pip install cfn-lint
+      shell: bash
+    - name: Lint
+      run: cfn-lint ${{ inputs.path-to-cfn-files }}
+      shell: bash
