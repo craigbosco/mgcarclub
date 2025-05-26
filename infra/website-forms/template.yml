@@ -99,35 +99,35 @@ Resources:
           Value: !Ref TagVersion
       TemplateURL: ./resource-templates/template-registration-action.yml
 
-  # ApiFrontend:
-  #   Type: AWS::CloudFormation::Stack
-  #   Properties:
-  #     Parameters:
-  #       Env: !Ref TagEnv
-  #       NamePrefix: !Ref TagService
-  #       ApiGatewayExecutionRoleArn: !Sub "${TagService}-ApiFrontend"
-  #       ApiGatewayName: !Sub "${TagService}-RegistrationApi"
-  #       LambdaFunctionArn: !GetAtt RegistrationAction.Outputs.LambdaFunctionArn
-  #       ApiGatewayLogGroup: !GetAtt IamCore.Outputs.ApiGatewayLogGroupName
-  #       ApiGatewayLoggingLevel: INFO
-  #       ApiGatewayMetricsEnabled: true
-  #       ApiStageName: v1
-  #       ApiMethodName: register
-  #       # WAFWebACL: !Ref WAFWebACL
-  #     Tags:
-  #       - Key: env
-  #         Value: !Ref TagEnv
-  #       - Key: Name
-  #         Value: !Sub "${TagService}-ApiFrontend"
-  #       - Key: "owner-name"
-  #         Value: !Ref TagOwner
-  #       - Key: "owner-email"
-  #         Value: !Ref TagOwnerEmail
-  #       - Key: service
-  #         Value: !Ref TagService
-  #       - Key: version
-  #         Value: !Ref TagVersion
-  #     TemplateURL: ./resource-templates/template-apigw.yml
+  ApiFrontend:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        Env: !Ref TagEnv
+        NamePrefix: !Ref TagService
+        ApiGatewayExecutionRoleArn: !Sub "${TagService}-ApiFrontend"
+        ApiGatewayName: !Sub "${TagService}-RegistrationApi"
+        LambdaFunctionArn: !GetAtt RegistrationAction.Outputs.LambdaFunctionArn
+        ApiGatewayLogGroup: !GetAtt IamCore.Outputs.ApiGatewayLogGroupName
+        ApiGatewayLoggingLevel: INFO
+        ApiGatewayMetricsEnabled: true
+        ApiStageName: v1
+        ApiMethodName: register
+        # WAFWebACL: !Ref WAFWebACL
+      Tags:
+        - Key: env
+          Value: !Ref TagEnv
+        - Key: Name
+          Value: !Sub "${TagService}-ApiFrontend"
+        - Key: "owner-name"
+          Value: !Ref TagOwner
+        - Key: "owner-email"
+          Value: !Ref TagOwnerEmail
+        - Key: service
+          Value: !Ref TagService
+        - Key: version
+          Value: !Ref TagVersion
+      TemplateURL: ./resource-templates/template-apigw.yml
 
 Outputs:
   ApiEndpoint:
