@@ -74,6 +74,12 @@ Resources:
     Properties:
       LogGroupName: !Sub "/aws/lambda/${LambdaRegistrationFunctionName}"
       RetentionInDays: 90
+  
+  ApiGatewayLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/apigateway/${NamePrefix}-APIGateway"
+      RetentionInDays: 90
 
   LambdaExecutionRoleInvokeFunctionPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -130,12 +136,15 @@ Resources:
 
 
 Outputs:
-  APIGatewayInvokeEndpointExecutionRoleArn:
+  ApiGatewayInvokeEndpointExecutionRoleArn:
     Description: ARN of the API Gateway execution role
     Value: !GetAtt APIGatewayInvokeEndpointExecutionRole.Arn
   ApiGatewayInvokeEndpointExecutionRoleName:
     Description: Name of the API Gateway execution role
     Value: !Ref APIGatewayInvokeEndpointExecutionRole
+  ApiGatewayLogGroupName:
+    Description: Name of the API Gateway log group
+    Value: !Ref ApiGatewayLogGroup
   LambdaRegistrationExecutionRoleArn:
     Description: ARN of the Lambda registration execution role
     Value: !GetAtt LambdaRegistrationExecutionRole.Arn

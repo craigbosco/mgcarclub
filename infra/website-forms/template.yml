@@ -105,7 +105,15 @@ Resources:
   #     Parameters:
   #       Env: !Ref TagEnv
   #       NamePrefix: !Ref TagService
+  #       ApiGatewayExecutionRoleArn: !Sub "${TagService}-ApiFrontend"
   #       ApiGatewayName: !Sub "${TagService}-RegistrationApi"
+  #       LambdaFunctionArn: !GetAtt RegistrationAction.Outputs.LambdaFunctionArn
+  #       ApiGatewayLogGroup: !GetAtt IamCore.Outputs.ApiGatewayLogGroupName
+  #       ApiGatewayLoggingLevel: INFO
+  #       ApiGatewayMetricsEnabled: true
+  #       ApiStageName: v1
+  #       ApiMethodName: register
+  #       # WAFWebACL: !Ref WAFWebACL
   #     Tags:
   #       - Key: env
   #         Value: !Ref TagEnv

@@ -1,62 +1,118 @@
-AWSTemplateFormatVersion: "2010-09-09"
-Description: DynamoDb Table and Lambda Function to handle website form submissions
+AWSTemplateFormatVersion: 2010-09-09
+Description: API Gateway in Public Internet mode
 
 Parameters:
-  
-Resources: 
-## 6) API Gateway Rest API
-  RegistrationApi:
+  Env:
+    Type: String
+    Description: Environment
+  NamePrefix:
+    Type: String
+    Description: Name prefix for all resources
+  LambdaFunctionArn: 
+    Type: String
+    Description: Lambda function ARN to invoke
+  ApiGatewayExecutionRoleArn:
+    Type: String
+    Description: API Gateway execution role ARN
+  ApiGatewayName:
+    Description: Api Gateway name.
+    Type: String
+    Default: "PredictionGateway"
+  ApiGatewayLogGroup:
+    Description: Api Gateway log group name.
+    Type: String
+  ApiGatewayLoggingLevel:
+    Description: Api Gateway logging level.
+    Type: String
+  ApiGatewayMetricsEnabled:
+    Description: Api Gateway metrics enabled.
+    Type: String
+  ApiStageName:
+    Type: "String"
+    Description: API Staging Name.
+    Default: "v1"
+  ApiMethodName:
+    Type: String
+    Description: API method.
+    Default: "register"
+  # WAFWebACL:
+  #   Type: String
+  #   Description: WAF Web ACL ARN
+
+Resources:
+  # API Gateway
+  ApiGatewayRestApi:
     Type: AWS::ApiGateway::RestApi
     Properties:
-      Name: RegistrationApi
+      Name: !Sub ${NamePrefix}-${ApiGatewayName}
+      Description: API to POST the registration
       ApiKeySourceType: HEADER
       MinimumCompressionSize: 0
       EndpointConfiguration:
         Types:
           - REGIONAL
+      Tags:
+        - Key: Name
+          Value: !Sub "${NamePrefix}-${Env}-APIGateway"
 
-  ## 7) API Resource: /register
-  RegisterResource:
+  ProxyResource:
     Type: AWS::ApiGateway::Resource
     Properties:
-      ParentId: !GetAtt RegistrationApi.RootResourceId
-      PathPart: register
-      RestApiId: !Ref RegistrationApi
+      RestApiId: !Ref ApiGatewayRestApi
+      ParentId: !GetAtt ApiGatewayRestApi.RootResourceId
+      PathPart: !Ref ApiMethodName
 
-  ## 8) POST Method Integration to Lambda
-  RegisterMethod:
+  ProxyResourceANY:
     Type: AWS::ApiGateway::Method
     Properties:
-      RestApiId: !Ref RegistrationApi
-      ResourceId: !Ref RegisterResource
-      HttpMethod: POST
+      ResourceId: !Ref ProxyResource
+      RestApiId: !Ref ApiGatewayRestApi
       AuthorizationType: NONE
+      HttpMethod: POST
       ApiKeyRequired: true
+      OperationName: !Ref ApiMethodName
       MethodResponses:
         - StatusCode: "200"
           ResponseModels: { "application/json": "Empty" }
       Integration:
-        Type: AWS_PROXY
         IntegrationHttpMethod: POST
-        Uri: !Sub
-          - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations
-          - { Region: !Ref AWS::Region, LambdaArn: !GetAtt RegistrationFunction.Arn }
+        Type: AWS
+        Uri: !Ref LambdaFunctionArn
+        Credentials: !Ref ApiGatewayExecutionRoleArn
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+          - StatusCode: "200"
 
-  ## 9) Permission for APIGW to call Lambda
-  ApiGatewayInvokePermission:
-    Type: AWS::Lambda::Permission
+  ApiGatewayDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: ProxyResourceANY
     Properties:
-      FunctionName: !Ref RegistrationFunction
-      Action: lambda:InvokeFunction
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RegistrationApi}/*/POST/register  
+      Description: API Deployment
+      RestApiId: !Ref ApiGatewayRestApi
 
-  ApiGatewayWAFAssociation:
-    Type: AWS::WAFv2::WebACLAssociation
+  ApiGatewayStage:
+    Type: AWS::ApiGateway::Stage
     Properties:
-      # Resource expects:  arn:partition:apigateway:region::/restapis/api-id/stages/stage-name
-      ResourceArn: !Sub arn:aws:apigateway:${AWS::Region}::/restapis/${ApiGatewayRestApi}/stages/${ApiGatewayStage}
-      WebACLArn: !Ref WAFWebACL
+      AccessLogSetting:
+        DestinationArn: !Ref ApiGatewayLogGroup
+        Format: "$context.identity.sourceIp,$context.identity.caller,$context.identity.user,$context.requestTime,$context.httpMethod,$context.resourcePath,$context.protocol,$context.status,$context.responseLength,$context.requestId"
+      DeploymentId: !Ref ApiGatewayDeployment
+      Description: API Stage v1
+      MethodSettings:
+        - ResourcePath: "/*"
+          HttpMethod: "*"
+          LoggingLevel: !Ref ApiGatewayLoggingLevel
+          MetricsEnabled: !Ref ApiGatewayMetricsEnabled
+      RestApiId: !Ref ApiGatewayRestApi
+      StageName: !Ref ApiStageName
+      TracingEnabled: true
+
+  # ApiGatewayWAFAssociation:
+  #   Type: AWS::WAFv2::WebACLAssociation
+  #   Properties:
+  #     # Resource expects:  arn:partition:apigateway:region::/restapis/api-id/stages/stage-name
+  #     ResourceArn: !Sub arn:aws:apigateway:${AWS::Region}::/restapis/${ApiGatewayRestApi}/stages/${ApiGatewayStage}
+  #     WebACLArn: !Ref WAFWebACL
 
   ApiKey:
     Type: AWS::ApiGateway::ApiKey
@@ -82,8 +138,6 @@ Resources:
       KeyType: API_KEY
       UsagePlanId: !Ref ApiUsagePlan
 
-
 Outputs:
-  ApiEndpoint:
-    Description: "POST endpoint for registrations"
-    Value: !Sub https://${RegistrationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/register
+  apiGatewayInvokeURL:
+    Value: !Sub https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiStageName}/${ApiMethodName}

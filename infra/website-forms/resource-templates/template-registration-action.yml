@@ -108,3 +108,8 @@ Resources:
               - ses:SendEmail
               - ses:SendRawEmail
             Resource: !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/${SenderEmail}
+
+Outputs:
+  LambdaFunctionArn:
+    Description: ARN of the Lambda function
+    Value: !GetAtt RegistrationFunction.Arn
