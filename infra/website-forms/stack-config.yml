@@ -1,0 +1,14 @@
+DisableRollback: false
+Capabilities:
+  - CAPABILITY_NAMED_IAM
+  - CAPABILITY_AUTO_EXPAND
+# OnFailure: ROLLBACK # Determines what action will be taken if stack creation fails. Valid values are: DO_NOTHING, ROLLBACK, DELETE.
+Tags: # Set static tags here which will apply to the component stack and nested resource stacks.
+- Key: 'App'
+  Value: 'mgcarclub'
+- Key: 'Company-Code'
+  Value: 'BCF'
+- Key: 'Cost-Center'
+  Value: 'tbd'
+- Key: 'Service'
+  Value: 'website-forms'

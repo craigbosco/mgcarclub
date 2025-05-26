@@ -1,0 +1,18 @@
+[
+    {
+        "ParameterKey": "TagEnv",
+        "ParameterValue": "prod"
+    },
+    {
+        "ParameterKey": "TagOwner",
+        "ParameterValue": "Craig Bosco"
+    },
+    {
+        "ParameterKey": "TagOwnerEmail",
+        "ParameterValue": "craigbosco@mac.com"
+    },
+    {
+        "ParameterKey": "TagVersion",
+        "ParameterValue": "0.1"
+    }
+]

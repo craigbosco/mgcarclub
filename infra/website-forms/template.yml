@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Assets to receive and transmit Website Form Submissions
+Parameters:
+  TagCompanyCode:
+    Default: "BCF"
+    Description: Value to use for the Company-Code tag.
+    Type: String
+  TagCostCenter:
+    Default: "tbd"
+    Description: Value to use for the Cost-Center tag.
+    Type: String
+  TagEnv:
+    AllowedValues:
+      - dev
+      - stage
+      - prod
+    Description: Standard Environment name.
+    Type: String
+  TagService:
+    Default: website-forms
+    Description: Value to use for the Service tag.
+    Type: String
+  TagOwner:
+    Description: Name of the owner of this component.
+    Type: String
+  TagOwnerEmail:
+    Description: Email of the owner of this component.
+    Type: String
+  TagVersion:
+    Description: Value to use for the Version tag, using a "major.minor" notation.
+    Type: String
+
+Resources:
+  WorkloadPermissionBoundaryParam:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: Test-Param
+      Type: String
+      Value: test-param-value
+      Description: Test SSM Parameter for testing purposes.
