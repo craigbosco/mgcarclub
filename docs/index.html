@@ -1,21 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Redirecting Form</title>
+  <meta charset="utf-8" />
+  <title>PayPal Smart Buttons</title>
+  <!-- 1) Load the PayPal JS SDK; replace YOUR_CLIENT_ID with yours -->
+  <script src="https://www.paypal.com/sdk/js?client-id=YOUR_CLIENT_ID&currency=USD"></script>
 </head>
 <body>
-  <form id="myForm">
-    <input type="email" name="email" placeholder="Your Email" required />
-    <button type="submit">Submit</button>
+
+  <form id="paymentForm">
+    <label>
+      Amount (USD):
+      <input type="number" id="amount" step="0.01" min="0.01" required />
+    </label>
+    <!-- The PayPal button will render here -->
+    <div id="paypal-button-container"></div>
   </form>
 
   <script>
-    document.getElementById('myForm').addEventListener('submit', function (e) {
-      e.preventDefault();
-      window.location.href = "https://www.paypal.com/ncp/payment/EGYLH574X43ZG";
-    });
+    // Wait until the SDK is loaded
+    paypal.Buttons({
+
+      // Called when the user clicks the button
+      createOrder: function(data, actions) {
+        var amt = parseFloat(document.getElementById('amount').value).toFixed(2);
+        return actions.order.create({
+          purchase_units: [{
+            amount: { value: amt }
+          }]
+        });
+      },
+
+      // Called after the payment is approved
+      onApprove: function(data, actions) {
+        return actions.order.capture().then(function(details) {
+          // Optionally send details to your server here
+
+          // Finally, redirect to a thank-you or next step
+          window.location.href = 'https://your-site.com/thank-you';
+        });
+      },
+
+      // Optional: handle cancellations or errors
+      onCancel: function (data) {
+        alert('Payment cancelled.');
+      },
+      onError: function (err) {
+        console.error('PayPal error', err);
+        alert('Something went wrong—you can try again.');
+      }
+
+    }).render('#paypal-button-container');
   </script>
+
 </body>
 </html>
