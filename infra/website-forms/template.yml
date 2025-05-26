@@ -38,3 +38,26 @@ Resources:
       Type: String
       Value: test-param-value
       Description: Test SSM Parameter for testing purposes.
+
+Outputs:
+  CompanyCode:
+    Description: Value of the Company-Code tag.
+    Value: !Ref TagCompanyCode
+  CostCenter:
+    Description: Value of the Cost-Center tag.
+    Value: !Ref TagCostCenter
+  Env:
+    Description: Value of the Env tag.
+    Value: !Ref TagEnv
+  Service:
+    Description: Value of the Service tag.
+    Value: !Ref TagService
+  Owner:
+    Description: Value of the Owner tag.
+    Value: !Ref TagOwner
+  OwnerEmail:
+    Description: Value of the OwnerEmail tag.
+    Value: !Ref TagOwnerEmail
+  Version:
+    Description: Value of the Version tag.
+    Value: !Ref TagVersion
