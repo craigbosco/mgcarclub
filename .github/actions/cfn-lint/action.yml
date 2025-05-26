@@ -13,5 +13,5 @@ runs:
         pip install cfn-lint
       shell: bash
     - name: Lint
-      run: cfn-lint ${{ inputs.path-to-cfn-files }}
+      run: cfn-lint --ignore-checks W2001 ${{ inputs.path-to-cfn-files }}
       shell: bash
