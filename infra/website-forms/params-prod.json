@@ -5,7 +5,7 @@
     },
     {
         "ParameterKey": "LambdaFunctionPackageKey",
-        "ParameterValue": ""
+        "ParameterValue": "bosco-cloud-foundation.jamboree_register.prod.package"
     },
     {
         "ParameterKey": "TagEnv",
