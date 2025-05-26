@@ -1,0 +1,89 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: DynamoDb Table and Lambda Function to handle website form submissions
+
+Parameters:
+  
+Resources: 
+## 6) API Gateway Rest API
+  RegistrationApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: RegistrationApi
+      ApiKeySourceType: HEADER
+      MinimumCompressionSize: 0
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  ## 7) API Resource: /register
+  RegisterResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      ParentId: !GetAtt RegistrationApi.RootResourceId
+      PathPart: register
+      RestApiId: !Ref RegistrationApi
+
+  ## 8) POST Method Integration to Lambda
+  RegisterMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RegistrationApi
+      ResourceId: !Ref RegisterResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      ApiKeyRequired: true
+      MethodResponses:
+        - StatusCode: "200"
+          ResponseModels: { "application/json": "Empty" }
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub
+          - arn:aws:apigateway:${Region}:lambda:path/2015-03-31/functions/${LambdaArn}/invocations
+          - { Region: !Ref AWS::Region, LambdaArn: !GetAtt RegistrationFunction.Arn }
+
+  ## 9) Permission for APIGW to call Lambda
+  ApiGatewayInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref RegistrationFunction
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RegistrationApi}/*/POST/register  
+
+  ApiGatewayWAFAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties:
+      # Resource expects:  arn:partition:apigateway:region::/restapis/api-id/stages/stage-name
+      ResourceArn: !Sub arn:aws:apigateway:${AWS::Region}::/restapis/${ApiGatewayRestApi}/stages/${ApiGatewayStage}
+      WebACLArn: !Ref WAFWebACL
+
+  ApiKey:
+    Type: AWS::ApiGateway::ApiKey
+    Properties:
+      Name: !Join ["", [{"Ref": "AWS::StackName"}, "-apikey"]]
+      Description: !Join ["", [{"Ref": "AWS::StackName"}, "api key"]]
+      Enabled: true
+
+  ApiUsagePlan:
+    Type: AWS::ApiGateway::UsagePlan
+    DependsOn: ApiGatewayStage
+    Properties:
+      ApiStages:
+      - ApiId: !Ref ApiGatewayRestApi
+        Stage: !Ref ApiStageName
+      Description: !Join [" ", [{"Ref": "AWS::StackName"}, "usage plan"]]
+      UsagePlanName: !Join ["", [{"Ref": "AWS::StackName"}, "-usage-plan"]]
+
+  ApiUsagePlanKey:
+    Type: AWS::ApiGateway::UsagePlanKey
+    Properties:
+      KeyId: !Ref ApiKey
+      KeyType: API_KEY
+      UsagePlanId: !Ref ApiUsagePlan
+
+
+Outputs:
+  ApiEndpoint:
+    Description: "POST endpoint for registrations"
+    Value: !Sub https://${RegistrationApi}.execute-api.${AWS::Region}.amazonaws.com/prod/register

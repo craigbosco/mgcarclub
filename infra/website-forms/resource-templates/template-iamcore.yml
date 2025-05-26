@@ -1,0 +1,144 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: IAM Roles and Policies for website forms functions
+
+Parameters:
+  Env:
+    Type: String
+    Description: Environment
+    Default: prod
+  NamePrefix:
+    Type: String
+    Description: Name prefix for all resources
+  PermissionBoundaryPolicy:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: Name of the SSM Paramter containing the standard GCF permissiong boundary policy ARN.
+    Default: BCF-workload-permission-boundary
+  LambdaRegistrationFunctionName:
+    Type: String
+    Description: The name of the Lambda function
+  SNSTopicName:
+    Type: String
+    Description: SNS Topic name
+  TagCostCenter:
+    Description: Value to use for the cost-center tag.
+    Type: String
+  TagOwner:
+    Description: Name of the owner of this component.
+    Type: String
+  TagOwnerEmail:
+    Description: Email of the owner of this component.
+    Type: String
+  Version:
+    Description: Value to use for the version tag, using a "major.minor" notation.
+    Type: String
+
+
+Resources:
+  # IAM
+  APIGatewayInvokeEndpointExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref APIGWInvokeEndpointRolePolicy
+      PermissionsBoundary: !Ref PermissionBoundaryPolicy
+  
+  LambdaRegistrationExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - !Ref LambdaRegistrationExecutionRolePolicy
+      PermissionsBoundary: !Ref PermissionBoundaryPolicy
+
+  RegistrationLambdaFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${LambdaRegistrationFunctionName}"
+      RetentionInDays: 90
+
+  LambdaExecutionRoleInvokeFunctionPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${NamePrefix}-LambdaExecutionRoleInvokeFunctionPolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          -
+            Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource: !Sub arn:aws:lambda:${AWS::Region}:*:function:* 
+
+  APIGWInvokeEndpointRolePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${NamePrefix}-InvokeEndpoint-APIGWExecutionRolePolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        -
+            Sid: SagemakerModelPackage
+            Effect: Allow
+            Action:
+              - sagemaker:InvokeEndpoint
+            Resource: !Sub arn:aws:sagemaker:${AWS::Region}:*:endpoint/*
+
+  LambdaRegistrationExecutionRolePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: !Sub ${NamePrefix}-LambdaRegistrationExecutionRolePolicy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - 
+            Sid: WriteLogsNotifyUser
+            Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: !Sub
+                  - '${LogsArn}:*'
+                  - LogsArn: !GetAtt RegistrationLambdaFunctionLogGroup.Arn
+        -
+            Sid: SNS
+            Effect: Allow
+            Action:
+              - SNS:Publish
+              - SNS:Subscribe
+            Resource:
+              - !Sub "arn:aws:sns:${AWS::Region}:*:${SNSTopicName}"
+
+
+
+Outputs:
+  APIGatewayInvokeEndpointExecutionRoleArn:
+    Description: ARN of the API Gateway execution role
+    Value: !GetAtt APIGatewayInvokeEndpointExecutionRole.Arn
+  ApiGatewayInvokeEndpointExecutionRoleName:
+    Description: Name of the API Gateway execution role
+    Value: !Ref APIGatewayInvokeEndpointExecutionRole
+  LambdaRegistrationExecutionRoleArn:
+    Description: ARN of the Lambda registration execution role
+    Value: !GetAtt LambdaRegistrationExecutionRole.Arn
+  LambdaRegistrationExecutionRoleName:
+    Description: Name of the Lambda registration execution role
+    Value: !Ref LambdaRegistrationExecutionRole

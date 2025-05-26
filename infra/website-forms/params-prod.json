@@ -1,5 +1,13 @@
 [
     {
+        "ParameterKey": "DeploymentBucket",
+        "ParameterValue": "stackset-bcf-app-cicd-4e09c3e3-cf91-49b4-b3-bucket-ree4bfwucsfc"
+    },
+    {
+        "ParameterKey": "LambdaFunctionPackageKey",
+        "ParameterValue": ""
+    },
+    {
         "ParameterKey": "TagEnv",
         "ParameterValue": "prod"
     },

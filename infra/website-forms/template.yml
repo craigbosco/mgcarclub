@@ -1,10 +1,19 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: Assets to receive and transmit Website Form Submissions
 Parameters:
-  TagCompanyCode:
-    Default: "BCF"
-    Description: Value to use for the Company-Code tag.
+  DeploymentBucket:
     Type: String
+    Description: S3 bucket name for deployment assets.
+  LambdaFunctionPackageKey:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: Name of the SSM Parameter containing the Lambda function package S3 key.
+  SenderEmail:
+    Type: String
+    Description: Verified SES email address (e.g. no-reply@yourdomain.com)
+  # TagCompanyCode:
+  #   Default: "BCF"
+  #   Description: Value to use for the Company-Code tag.
+  #   Type: String
   TagCostCenter:
     Default: "tbd"
     Description: Value to use for the Cost-Center tag.
@@ -31,33 +40,87 @@ Parameters:
     Type: String
 
 Resources:
-  WorkloadPermissionBoundaryParam:
-    Type: AWS::SSM::Parameter
+  IamCore:
+    Type: AWS::CloudFormation::Stack
     Properties:
-      Name: Test-Param
-      Type: String
-      Value: test-param-value
-      Description: Test SSM Parameter for testing purposes.
+      Parameters:
+        Env: !Ref TagEnv
+        NamePrefix: !Ref TagService
+        LambdaRegistrationFunctionName: !Sub "${TagService}-RegistrationLambda"
+        SNSTopicName: !Sub "${TagService}-RegistrationTopic"
+        TagCostCenter: !Ref TagCostCenter
+        TagOwner: !Ref TagOwner
+        TagOwnerEmail: !Ref TagOwnerEmail
+        Version: !Ref TagVersion
+      Tags:
+        - Key: env
+          Value: !Ref TagEnv
+        - Key: Name
+          Value: !Sub "${TagService}-stack"
+        - Key: "owner-name"
+          Value: !Ref TagOwner
+        - Key: "owner-email"
+          Value: !Ref TagOwnerEmail
+        - Key: service
+          Value: !Ref TagService
+        - Key: version
+          Value: !Ref TagVersion
+      TemplateURL: ./resource-templates/template-iamcore.yml
+
+  RegistrationAction:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Parameters:
+        DeploymentBucket: !Ref DeploymentBucket
+        Env: !Ref TagEnv
+        LambdaFunctionPackageKey: !Ref LambdaFunctionPackageKey
+        LambdaRegistrationFunctionName: !Sub "${TagService}-RegistrationLambda"
+        LambdaRegistrationExecutionRoleName: !GetAtt IamCore.Outputs.LambdaRegistrationExecutionRoleName
+        NamePrefix: !Ref TagService
+        SNSTopicName: !Sub "${TagService}-RegistrationTopic"
+        SenderEmail: !Ref SenderEmail
+        TagCostCenter: !Ref TagCostCenter
+        TagOwner: !Ref TagOwner
+        TagOwnerEmail: !Ref TagOwnerEmail
+        Version: !Ref TagVersion
+      Tags:
+        - Key: env
+          Value: !Ref TagEnv
+        - Key: Name
+          Value: !Sub "${TagService}-RegistrationAction"
+        - Key: "owner-name"
+          Value: !Ref TagOwner
+        - Key: "owner-email"
+          Value: !Ref TagOwnerEmail
+        - Key: service
+          Value: !Ref TagService
+        - Key: version
+          Value: !Ref TagVersion
+      TemplateURL: ./resource-templates/template-registration-action.yml
+
+  # ApiFrontend:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     Parameters:
+  #       Env: !Ref TagEnv
+  #       NamePrefix: !Ref TagService
+  #       ApiGatewayName: !Sub "${TagService}-RegistrationApi"
+  #     Tags:
+  #       - Key: env
+  #         Value: !Ref TagEnv
+  #       - Key: Name
+  #         Value: !Sub "${TagService}-ApiFrontend"
+  #       - Key: "owner-name"
+  #         Value: !Ref TagOwner
+  #       - Key: "owner-email"
+  #         Value: !Ref TagOwnerEmail
+  #       - Key: service
+  #         Value: !Ref TagService
+  #       - Key: version
+  #         Value: !Ref TagVersion
+  #     TemplateURL: ./resource-templates/template-apigw.yml
 
 Outputs:
-  CompanyCode:
-    Description: Value of the Company-Code tag.
-    Value: !Ref TagCompanyCode
-  CostCenter:
-    Description: Value of the Cost-Center tag.
-    Value: !Ref TagCostCenter
-  Env:
-    Description: Value of the Env tag.
-    Value: !Ref TagEnv
-  Service:
-    Description: Value of the Service tag.
-    Value: !Ref TagService
-  Owner:
-    Description: Value of the Owner tag.
-    Value: !Ref TagOwner
-  OwnerEmail:
-    Description: Value of the OwnerEmail tag.
-    Value: !Ref TagOwnerEmail
-  Version:
-    Description: Value of the Version tag.
-    Value: !Ref TagVersion
+  # ApiEndpoint:
+  #   Description: "POST endpoint for registrations"
+  #   Value: !GetAtt ApiFrontend.Outputs.ApiEndpoint
