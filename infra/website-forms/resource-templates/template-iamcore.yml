@@ -145,6 +145,9 @@ Outputs:
   ApiGatewayLogGroupName:
     Description: Name of the API Gateway log group
     Value: !Ref ApiGatewayLogGroup
+  ApiGatewayLogGroupArn:
+    Description: ARN of the API Gateway log group
+    Value: !GetAtt ApiGatewayLogGroup.Arn
   LambdaRegistrationExecutionRoleArn:
     Description: ARN of the Lambda registration execution role
     Value: !GetAtt LambdaRegistrationExecutionRole.Arn

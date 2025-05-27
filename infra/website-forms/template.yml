@@ -112,7 +112,7 @@ Resources:
         ApiGatewayExecutionRoleArn: !GetAtt IamCore.Outputs.ApiGatewayInvokeEndpointExecutionRoleArn
         ApiGatewayName: !Sub "${TagService}-RegistrationApi"
         LambdaFunctionArn: !GetAtt RegistrationAction.Outputs.LambdaFunctionArn
-        ApiGatewayLogGroup: !GetAtt IamCore.Outputs.ApiGatewayLogGroupName
+        ApiGatewayLogGroup: !GetAtt IamCore.Outputs.ApiGatewayLogGroupArn
         ApiGatewayLoggingLevel: INFO
         ApiGatewayMetricsEnabled: true
         ApiStageName: v1
