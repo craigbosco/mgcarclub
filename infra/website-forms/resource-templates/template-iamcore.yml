@@ -49,7 +49,7 @@ Resources:
             Action:
               - sts:AssumeRole
       ManagedPolicyArns:
-        - !Ref APIGWInvokeEndpointRolePolicy
+        - !Ref ApiInvokeLambdaRolePolicy
       PermissionsBoundary: !Ref PermissionBoundaryPolicy
   
   LambdaRegistrationExecutionRole:
@@ -94,19 +94,27 @@ Resources:
               - lambda:InvokeFunction
             Resource: !Sub arn:aws:lambda:${AWS::Region}:*:function:* 
 
-  APIGWInvokeEndpointRolePolicy:
+  ApiInvokeLambdaRolePolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      ManagedPolicyName: !Sub ${NamePrefix}-InvokeEndpoint-APIGWExecutionRolePolicy
+      ManagedPolicyName: !Sub ${NamePrefix}-InvokeLambda-ApiGatewayExecutionRolePolicy
       PolicyDocument:
         Version: 2012-10-17
         Statement:
         -
-            Sid: SagemakerModelPackage
+            Sid: PutLogs
             Effect: Allow
             Action:
-              - sagemaker:InvokeEndpoint
-            Resource: !Sub arn:aws:sagemaker:${AWS::Region}:*:endpoint/*
+              - logs:*
+            Resource: !Sub
+                  - '${LogsArn}:*'
+                  - LogsArn: !GetAtt ApiGatewayLogGroup.Arn
+        -
+            Sid: InvokeLambda
+            Effect: Allow
+            Action:
+              - lambda:InvokeFunction
+            Resource: !Sub arn:aws:lambda:${AWS::Region}:*:function:${LambdaRegistrationFunctionName}
 
   LambdaRegistrationExecutionRolePolicy:
     Type: AWS::IAM::ManagedPolicy
