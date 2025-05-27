@@ -77,7 +77,8 @@ Resources:
       Integration:
         IntegrationHttpMethod: POST
         Type: AWS
-        Uri: !Ref LambdaFunctionArn
+        # Uri: !Ref LambdaFunctionArn
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunctionArn}/invocations
         Credentials: !Ref ApiGatewayExecutionRoleArn
         PassthroughBehavior: WHEN_NO_MATCH
         IntegrationResponses:
