@@ -80,6 +80,10 @@ Resources:
       MethodResponses:
         - StatusCode: "200"
           ResponseModels: { "application/json": "Empty" }
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
       Integration:
         IntegrationHttpMethod: POST
         Type: AWS
@@ -89,10 +93,43 @@ Resources:
         PassthroughBehavior: WHEN_NO_MATCH
         IntegrationResponses:
           - StatusCode: "200"
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'https://craigbosco.github.io'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+
+  ProxyResourceOPTIONS:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ResourceId: !Ref ProxyResource
+      RestApiId: !Ref ApiGatewayRestApi
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      MethodResponses:
+        - StatusCode: "200"
+          ResponseModels: { "application/json": "Empty" }
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: "200"
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'https://craigbosco.github.io'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+            ResponseTemplates:
+              application/json: "{}"
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
 
   ApiGatewayDeployment:
     Type: AWS::ApiGateway::Deployment
-    DependsOn: ProxyResourceANY
+    DependsOn: 
+      - ProxyResourceANY
+      - ProxyResourceOPTIONS
     Properties:
       Description: API Deployment
       RestApiId: !Ref ApiGatewayRestApi
@@ -121,6 +158,7 @@ Resources:
   #     ResourceArn: !Sub arn:aws:apigateway:${AWS::Region}::/restapis/${ApiGatewayRestApi}/stages/${ApiGatewayStage}
   #     WebACLArn: !Ref WAFWebACL
 
+  # API Key resources - required for authenticated API calls from craigbosco.github.io
   ApiKey:
     Type: AWS::ApiGateway::ApiKey
     Properties:
