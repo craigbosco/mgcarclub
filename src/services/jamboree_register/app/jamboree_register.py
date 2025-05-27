@@ -1,7 +1,7 @@
 import json
 import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 import boto3
 
 dynamodb = boto3.resource('dynamodb')
@@ -13,6 +13,9 @@ SNS_TOPIC_ARN = os.environ['SNS_TOPIC_ARN']
 SES_SOURCE_EMAIL = os.environ['SES_SOURCE_EMAIL']
 
 def lambda_handler(event, context):
+    # Print the event for debugging
+    print("Received event:", json.dumps(event, indent=2))
+    
     # Parse & validate
     body = json.loads(event.get('body','{}'))
     name  = body.get('name')
@@ -22,7 +25,7 @@ def lambda_handler(event, context):
 
     # Build item
     item_id   = str(uuid.uuid4())
-    timestamp = datetime.utcnow().isoformat()
+    timestamp = datetime.now(timezone.utc).isoformat()
     item = {
         'id': item_id,
         'timestamp': timestamp,
