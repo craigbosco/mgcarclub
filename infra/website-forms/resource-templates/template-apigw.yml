@@ -148,3 +148,5 @@ Resources:
 Outputs:
   apiGatewayInvokeURL:
     Value: !Sub https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiStageName}/${ApiMethodName}
+  ApiKeyId:
+    Value: !Ref ApiKey

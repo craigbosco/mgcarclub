@@ -137,3 +137,6 @@ Outputs:
   ApiEndpoint:
     Description: "POST endpoint for registrations"
     Value: !GetAtt ApiFrontend.Outputs.apiGatewayInvokeURL
+  ApiKeyId: 
+    Description: "API Key ID for the API Gateway"
+    Value: !GetAtt ApiFrontend.Outputs.ApiKeyId
