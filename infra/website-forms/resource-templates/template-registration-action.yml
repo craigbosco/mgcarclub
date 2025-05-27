@@ -11,10 +11,10 @@ Parameters:
   SenderEmail:
     Type: String
     Description: Verified SES email address 
-  Env:
-    Type: String
-    Description: Environment
-    Default: prod
+  # Env:
+  #   Type: String
+  #   Description: Environment
+  #   Default: prod
   NamePrefix:
     Type: String
     Description: Name prefix for all resources
@@ -27,18 +27,18 @@ Parameters:
   SNSTopicName:
     Type: String
     Description: SNS Topic name
-  TagCostCenter:
-    Description: Value to use for the cost-center tag.
-    Type: String
-  TagOwner:
-    Description: Name of the owner of this component.
-    Type: String
-  TagOwnerEmail:
-    Description: Email of the owner of this component.
-    Type: String
-  Version:
-    Description: Value to use for the version tag, using a "major.minor" notation.
-    Type: String
+  # TagCostCenter:
+  #   Description: Value to use for the cost-center tag.
+  #   Type: String
+  # TagOwner:
+  #   Description: Name of the owner of this component.
+  #   Type: String
+  # TagOwnerEmail:
+  #   Description: Email of the owner of this component.
+  #   Type: String
+  # Version:
+  #   Description: Value to use for the version tag, using a "major.minor" notation.
+  #   Type: String
 
 
 Resources: 
@@ -57,7 +57,7 @@ Resources:
   RegistrationTopic:
     Type: AWS::SNS::Topic
     Properties:
-      TopicName: RegistrationTopic
+      TopicName: !Ref SNSTopicName
 
   SESIdentity:
     Type: AWS::SES::EmailIdentity

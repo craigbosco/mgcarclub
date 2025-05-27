@@ -45,14 +45,14 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       Parameters:
-        Env: !Ref TagEnv
+        # Env: !Ref TagEnv
         NamePrefix: !Ref TagService
         LambdaRegistrationFunctionName: !Sub "${TagService}-RegistrationLambda"
         SNSTopicName: !Sub "${TagService}-RegistrationTopic"
-        TagCostCenter: !Ref TagCostCenter
-        TagOwner: !Ref TagOwner
-        TagOwnerEmail: !Ref TagOwnerEmail
-        Version: !Ref TagVersion
+        # TagCostCenter: !Ref TagCostCenter
+        # TagOwner: !Ref TagOwner
+        # TagOwnerEmail: !Ref TagOwnerEmail
+        # Version: !Ref TagVersion
       Tags:
         - Key: env
           Value: !Ref TagEnv
@@ -66,6 +66,8 @@ Resources:
           Value: !Ref TagService
         - Key: version
           Value: !Ref TagVersion
+        - Key: cost-center
+          Value: !Ref TagCostCenter
       TemplateURL: ./resource-templates/template-iamcore.yml
 
   RegistrationAction:
@@ -73,17 +75,17 @@ Resources:
     Properties:
       Parameters:
         DeploymentBucket: !Ref DeploymentBucket
-        Env: !Ref TagEnv
+        # Env: !Ref TagEnv
         LambdaFunctionPackageKey: !Ref LambdaFunctionPackageKey
         LambdaRegistrationFunctionName: !Sub "${TagService}-RegistrationLambda"
         LambdaRegistrationExecutionRoleName: !GetAtt IamCore.Outputs.LambdaRegistrationExecutionRoleName
         NamePrefix: !Ref TagService
         SNSTopicName: !Sub "${TagService}-RegistrationTopic"
         SenderEmail: !Ref SenderEmail
-        TagCostCenter: !Ref TagCostCenter
-        TagOwner: !Ref TagOwner
-        TagOwnerEmail: !Ref TagOwnerEmail
-        Version: !Ref TagVersion
+        # TagCostCenter: !Ref TagCostCenter
+        # TagOwner: !Ref TagOwner
+        # TagOwnerEmail: !Ref TagOwnerEmail
+        # Version: !Ref TagVersion
       Tags:
         - Key: env
           Value: !Ref TagEnv
