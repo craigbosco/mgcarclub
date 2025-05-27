@@ -10,14 +10,79 @@
 
   <form id="paymentForm">
     <label>
+      First Name:
+      <input type="text" id="firstName" name="firstName">
+    </label>
+    <label>
+      Last Name:
+      <input type="text" id="lastName" name="lastName">
+    </label>
+    <label>
+      Description:
+      <textarea id="description" name="description" rows="3"></textarea>
+    </label>
+    <label>
+      Address:
+      <textarea id="address" name="address" rows="4" placeholder="Street, City, State ZIP"></textarea>
+    </label>
+    <label>
+          Phone Number:
+      <input type="tel" id="phone" name="phone">
+    </label>
+    <label>
+      Email Address:
+      <input type="email" id="email" name="email">
+    </label>
+    <label>
+      Year, Make, and Model:
+      <input type="text" id="yearMakeModel" name="yearMakeModel" placeholder="e.g., 1965 MGB">
+    </label>
+    <label>
+      Digital Signature (Type Your Full Name):
+      <textarea id="signature" name="signature" rows="2" placeholder="Your typed name"></textarea>
+    </label>
+    <p>I AM AWARE of the hazards inherent with motor vehicle events & specifically release & so indemnify the organizers, supporting sponsors, & the Florida Suncoast MG Car Club collectively & separately, for any & all liability from personal injury or property damage incurred by me or my guest(s) while participating in the MG Jamboree. I understand & agree that The Florida Suncoast MG Car Club reserves the right to revoke my registration & retain my registration fee should I engage in reckless, dangerous and/or unsafe behavior. I (We) have read, understand, and agree to this release.</p>
+    <label>
+      Event Type:
+      <select id="eventType" name="eventType">
+        <option value="carShow">MG Car Show</option>
+        <option value="boatTour">Pontoon Boat Tour</option>
+      </select>
+    </label>
+    <label id="participantsLabel" style="display:none;">
+      Number of Participants:
+      <input type="number" id="participants" name="participants" min="1" value="1">
+    </label>
+    <label>
       Amount (USD):
-      <input type="number" id="amount" step="0.01" min="0.01" required />
+      <input type="number" id="amount" name="amount" step="0.01" min="0.01" readonly>
     </label>
     <!-- The PayPal button will render here -->
     <div id="paypal-button-container"></div>
   </form>
 
   <script>
+    function updateAmount() {
+      var eventType = document.getElementById('eventType').value;
+      var now = new Date();
+      var cutoffCar = new Date('2025-09-01');
+      var amount = 0;
+      if (eventType === 'carShow') {
+        amount = now < cutoffCar ? 25 : 35;
+        document.getElementById('participantsLabel').style.display = 'none';
+      } else if (eventType === 'boatTour') {
+        var participants = parseInt(document.getElementById('participants').value) || 1;
+        amount = participants * 25;
+        document.getElementById('participantsLabel').style.display = '';
+      }
+      amount = amount * 1.05;
+      document.getElementById('amount').value = amount.toFixed(2);
+    }
+
+    document.getElementById('eventType').addEventListener('change', updateAmount);
+    document.getElementById('participants').addEventListener('input', updateAmount);
+    window.addEventListener('load', updateAmount);
+
     // Wait until the SDK is loaded
     paypal.Buttons({
 
