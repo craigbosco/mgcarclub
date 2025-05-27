@@ -253,11 +253,10 @@
         };
         
         // Create test payload with form data
-        const testPayload = {
-          test: true,
-          timestamp: new Date().toISOString(),
-          message: 'API connectivity test with form data',
-          formData: formData
+       const requestData = {
+          ...formData,
+          paymentDetails: paymentDetails,
+          test_mode: true // Indicate this is a test request
         };
         
         console.log('Sending test request to:', SERVER_URL);
@@ -269,7 +268,7 @@
             'Content-Type': 'application/json',
             'x-api-key': apiKey
           },
-          body: JSON.stringify(testPayload)
+          body: JSON.stringify(requestData)
         });
         
         // Get response text/json
