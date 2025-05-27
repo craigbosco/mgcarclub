@@ -8,9 +8,9 @@ Parameters:
   LambdaFunctionPackageKey:
     Type: AWS::SSM::Parameter::Value<String>
     Description: Name of the SSM Parameter containing the Lambda function package S3 key.
-  SenderEmail:
-    Type: String
-    Description: Verified SES email address (e.g. no-reply@yourdomain.com)
+  # SenderEmail:
+  #   Type: String
+  #   Description: Verified SES email address (e.g. no-reply@yourdomain.com)
   # TagCompanyCode:
   #   Default: "BCF"
   #   Description: Value to use for the Company-Code tag.
@@ -81,7 +81,7 @@ Resources:
         LambdaRegistrationExecutionRoleName: !GetAtt IamCore.Outputs.LambdaRegistrationExecutionRoleName
         NamePrefix: !Ref TagService
         SNSTopicName: !Sub "${TagService}-RegistrationTopic"
-        SenderEmail: !Ref SenderEmail
+        # SenderEmail: !Ref SenderEmail
         # TagCostCenter: !Ref TagCostCenter
         # TagOwner: !Ref TagOwner
         # TagOwnerEmail: !Ref TagOwnerEmail

@@ -8,9 +8,9 @@ Parameters:
   LambdaFunctionPackageKey:
     Type: String
     Description: S3 key for the Lambda function package.
-  SenderEmail:
-    Type: String
-    Description: Verified SES email address 
+  # SenderEmail:
+  #   Type: String
+  #   Description: Verified SES email address 
   # Env:
   #   Type: String
   #   Description: Environment
@@ -59,10 +59,10 @@ Resources:
     Properties:
       TopicName: !Ref SNSTopicName
 
-  SESIdentity:
-    Type: AWS::SES::EmailIdentity
-    Properties:
-      EmailIdentity: !Ref SenderEmail
+  # SESIdentity:
+  #   Type: AWS::SES::EmailIdentity
+  #   Properties:
+  #     EmailIdentity: !Ref SenderEmail
 
   ## 5) Lambda Function
   RegistrationFunction:
@@ -80,7 +80,7 @@ Resources:
         Variables:
           TABLE_NAME: !Ref RegistrationTable
           SNS_TOPIC_ARN: !Ref RegistrationTopic
-          SES_SOURCE_EMAIL: !Ref SenderEmail
+          SES_SOURCE_EMAIL: "Test"
       
 
   LambdaDynamoExecutionPolicy:
@@ -102,12 +102,12 @@ Resources:
             Action:
               - sns:Publish
             Resource: !Ref RegistrationTopic
-        - 
-            Effect: Allow
-            Action:
-              - ses:SendEmail
-              - ses:SendRawEmail
-            Resource: !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/${SenderEmail}
+        # - 
+        #     Effect: Allow
+        #     Action:
+        #       - ses:SendEmail
+        #       - ses:SendRawEmail
+        #     Resource: !Sub arn:aws:ses:${AWS::Region}:${AWS::AccountId}:identity/${SenderEmail}
 
 Outputs:
   LambdaFunctionArn:
