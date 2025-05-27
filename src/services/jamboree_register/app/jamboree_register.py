@@ -47,10 +47,27 @@ def lambda_handler(event, context):
 
     # Parse & validate
     body = json.loads(event.get('body','{}'))
-    name  = body.get('name')
+    
+    # Extract required fields
+    firstName = body.get('firstName')
+    lastName = body.get('lastName')
     email = body.get('email')
-    if not name or not email:
-        return { 'statusCode': 400, 'body': json.dumps({'error':'name & email required'}) }
+    
+    # Validate required fields
+    if not firstName or not lastName or not email:
+        return { 'statusCode': 400, 'body': json.dumps({'error':'firstName, lastName & email required'}) }
+    
+    # Extract optional fields
+    attendees = body.get('attendees', '')
+    address = body.get('address', '')
+    phone = body.get('phone', '')
+    yearMakeModel = body.get('yearMakeModel', '')
+    signature = body.get('signature', '')
+    eventType = body.get('eventType', '')
+    participants = body.get('participants', '')
+    amount = body.get('amount', '')
+    paymentDetails = body.get('paymentDetails', '')
+    is_production = body.get('is_production', True)
 
     # Build item
     item_id   = str(uuid.uuid4())
@@ -58,20 +75,55 @@ def lambda_handler(event, context):
     item = {
         'id': item_id,
         'timestamp': timestamp,
-        'name': name,
+        'firstName': firstName,
+        'lastName': lastName,
         'email': email,
-        'is_production': False
+        'attendees': attendees,
+        'address': address,
+        'phone': phone,
+        'yearMakeModel': yearMakeModel,
+        'signature': signature,
+        'eventType': eventType,
+        'participants': participants,
+        'amount': amount,
+        'paymentDetails': paymentDetails,
+        'is_production': is_production
     }
 
     # Store in DynamoDB
     table = dynamodb.Table(TABLE_NAME)
     table.put_item(Item=item)
+    logger.info(f"[lambda_handler]: Stored item {item_id} in DynamoDB table {TABLE_NAME}")
+
+    # Build the message for SNS
+    if eventType == "carShow":
+        registration_type = "Car Show Only"
+    elif eventType == "boatTour":
+        registration_type = "Car Show and Boat Tour"
+
+    message = f"""
+    New registration received for MG Jamboree 2025:
+    
+    - ID: {item_id}
+    - Name: {firstName} {lastName}
+    - Email: {email}
+    - Other Attendees: {attendees}
+    - Address: {address}
+    - Phone: {phone}
+    - Year/Make/Model: {yearMakeModel}
+    - Accepted Waiver: {signature}
+    - Signup Type: {registration_type}
+    - Number of Tour Participants: {participants}
+    - Amount Paid: {amount}
+    - Payment Details: {paymentDetails}
+    - Timestamp: {timestamp}
+    """
 
     # Notify via SNS
     sns.publish(
         TopicArn=SNS_TOPIC_ARN,
-        Subject='New Registration',
-        Message=json.dumps(item),
+        Subject='MG Jamboree 2025: New Registration',
+        Message=message,
     )
 
     # # Send confirmation email via SES
@@ -80,7 +132,7 @@ def lambda_handler(event, context):
     #     Destination={'ToAddresses':[email]},
     #     Message={
     #     'Subject':{'Data':'Registration Confirmation'},
-    #     'Body':{'Text':{'Data':f"Hello {name},\n\nThanks for registering! Your ID: {item_id}"}}
+    #     'Body':{'Text':{'Data':f"Hello {firstName} {lastName},\n\nThanks for registering! Your ID: {item_id}"}}
     #     }
     # )
 
