@@ -40,6 +40,12 @@ Parameters:
   #   Description: WAF Web ACL ARN
 
 Resources:
+  # API Gateway Account Configuration for CloudWatch Logs
+  ApiGatewayAccount:
+    Type: AWS::ApiGateway::Account
+    Properties:
+      CloudWatchRoleArn: !Ref ApiGatewayExecutionRoleArn
+
   # API Gateway
   ApiGatewayRestApi:
     Type: AWS::ApiGateway::RestApi

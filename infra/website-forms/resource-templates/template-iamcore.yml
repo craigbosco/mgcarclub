@@ -50,6 +50,7 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - !Ref ApiInvokeLambdaRolePolicy
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
       PermissionsBoundary: !Ref PermissionBoundaryPolicy
   
   LambdaRegistrationExecutionRole:
@@ -140,7 +141,6 @@ Resources:
               - SNS:Subscribe
             Resource:
               - !Sub "arn:aws:sns:${AWS::Region}:*:${SNSTopicName}"
-
 
 
 Outputs:
