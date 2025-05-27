@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <title>MG Jamboree 2025 Registration</title>
-  <!-- 1) Load the PayPal JS SDK; replace YOUR_CLIENT_ID with yours -->
+  <!-- Load the PayPal JS SDK -->
   <script src="https://www.paypal.com/sdk/js?client-id=AV3tPHQiTdXFl-AMQq_6Kd_5VvfnKOzSeMp1OCHfKafXBT_oQurHU_zhzrctGnIhCJOYoI-B40hYdvqw&currency=USD"></script>
 </head>
 <body>
@@ -22,13 +22,15 @@
     <br><br>
 
     <label>
-      Description:
-      <textarea id="description" name="description" rows="3"></textarea>
+      Other Attendees (if applicable):
+      <br>
+      <textarea id="attendees" name="attendees" rows="2" placeholder="First & Last Name"></textarea>
     </label>
     <br><br>
 
     <label>
       Address:
+      <br>
       <textarea id="address" name="address" rows="4" placeholder="Street, City, State ZIP" required></textarea>
     </label>
     <br><br>
