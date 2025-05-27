@@ -62,8 +62,8 @@ Resources:
           Value: !Ref TagOwner
         - Key: "owner-email"
           Value: !Ref TagOwnerEmail
-        - Key: service
-          Value: !Ref TagService
+        # - Key: service
+        #   Value: !Ref TagService
         - Key: version
           Value: !Ref TagVersion
       TemplateURL: ./resource-templates/template-iamcore.yml
@@ -93,8 +93,8 @@ Resources:
           Value: !Ref TagOwner
         - Key: "owner-email"
           Value: !Ref TagOwnerEmail
-        - Key: service
-          Value: !Ref TagService
+        # - Key: service
+        #   Value: !Ref TagService
         - Key: version
           Value: !Ref TagVersion
       TemplateURL: ./resource-templates/template-registration-action.yml
@@ -123,8 +123,8 @@ Resources:
           Value: !Ref TagOwner
         - Key: "owner-email"
           Value: !Ref TagOwnerEmail
-        - Key: service
-          Value: !Ref TagService
+        # - Key: service
+        #   Value: !Ref TagService
         - Key: version
           Value: !Ref TagVersion
       TemplateURL: ./resource-templates/template-apigw.yml
