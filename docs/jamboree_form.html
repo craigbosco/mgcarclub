@@ -5,6 +5,22 @@
   <title>MG Jamboree 2025 Registration</title>
   <!-- Load the PayPal JS SDK -->
   <script src="https://www.paypal.com/sdk/js?client-id=AV3tPHQiTdXFl-AMQq_6Kd_5VvfnKOzSeMp1OCHfKafXBT_oQurHU_zhzrctGnIhCJOYoI-B40hYdvqw&currency=USD"></script>
+  <style>
+    #paypal-button-container {
+      transition: opacity 0.3s ease;
+    }
+    
+    .form-validation-message {
+      color: #d32f2f;
+      font-size: 14px;
+      margin-bottom: 10px;
+      display: none;
+    }
+    
+    .form-validation-message.show {
+      display: block;
+    }
+  </style>
 </head>
 <body>
 
@@ -81,6 +97,9 @@
       <input type="number" id="amount" name="amount" step="0.01" min="0.01" readonly>
     </label>
     <br><br>
+    <div id="validation-message" class="form-validation-message">
+      Please fill out all required fields before proceeding with payment.
+    </div>
     <!-- The PayPal button will render here -->
     <div id="paypal-button-container"></div>
   </form>
@@ -111,17 +130,64 @@
       // Add 5% processing fee
       totalAmount = totalAmount * 1.05;
       document.getElementById('amount').value = totalAmount.toFixed(2);
+      
+      // Check form validation after amount update
+      checkFormValidity();
     }
+
+    function validateForm() {
+      var firstName = document.getElementById('firstName').value.trim();
+      var lastName = document.getElementById('lastName').value.trim();
+      var address = document.getElementById('address').value.trim();
+      var phone = document.getElementById('phone').value.trim();
+      var email = document.getElementById('email').value.trim();
+      var signature = document.getElementById('signature').value.trim();
+
+      return firstName && lastName && address && phone && email && signature;
+    }
+
+    function checkFormValidity() {
+      var paypalContainer = document.getElementById('paypal-button-container');
+      var validationMessage = document.getElementById('validation-message');
+      var isValid = validateForm();
+      
+      if (isValid) {
+        paypalContainer.style.opacity = '1';
+        paypalContainer.style.pointerEvents = 'auto';
+        validationMessage.classList.remove('show');
+      } else {
+        paypalContainer.style.opacity = '0.5';
+        paypalContainer.style.pointerEvents = 'none';
+        validationMessage.classList.add('show');
+      }
+    }
+
+    // Add event listeners to all required fields for real-time validation
+    document.getElementById('firstName').addEventListener('input', checkFormValidity);
+    document.getElementById('lastName').addEventListener('input', checkFormValidity);
+    document.getElementById('address').addEventListener('input', checkFormValidity);
+    document.getElementById('phone').addEventListener('input', checkFormValidity);
+    document.getElementById('email').addEventListener('input', checkFormValidity);
+    document.getElementById('signature').addEventListener('input', checkFormValidity);
 
     document.getElementById('eventType').addEventListener('change', updateAmount);
     document.getElementById('participants').addEventListener('input', updateAmount);
-    window.addEventListener('load', updateAmount);
+    window.addEventListener('load', function() {
+      updateAmount();
+      checkFormValidity();
+    });
 
     // Wait until the SDK is loaded
     paypal.Buttons({
 
       // Called when the user clicks the button
       createOrder: function(data, actions) {
+        // Double-check form validation before processing payment
+        if (!validateForm()) {
+          alert('Please fill out all required fields before proceeding with payment.');
+          return Promise.reject(new Error('Form validation failed'));
+        }
+        
         var amt = parseFloat(document.getElementById('amount').value).toFixed(2);
         return actions.order.create({
           purchase_units: [{
