@@ -15,15 +15,19 @@ Parameters:
   #   Type: String
   #   Description: Environment
   #   Default: prod
-  NamePrefix:
-    Type: String
-    Description: Name prefix for all resources
   LambdaRegistrationFunctionName:
     Type: String
     Description: The name of the Lambda function
   LambdaRegistrationExecutionRoleName:
     Type: String
     Description: The name of the Lambda execution role
+  NotifyUserEmail:
+    Default: craigbosco@mac.com
+    Type: String
+    Description: Email address to notify user upon registration
+  NamePrefix:
+    Type: String
+    Description: Name prefix for all resources
   SNSTopicName:
     Type: String
     Description: SNS Topic name
@@ -39,7 +43,6 @@ Parameters:
   # Version:
   #   Description: Value to use for the version tag, using a "major.minor" notation.
   #   Type: String
-
 
 Resources: 
   RegistrationTable:
@@ -58,6 +61,35 @@ Resources:
     Type: AWS::SNS::Topic
     Properties:
       TopicName: !Ref SNSTopicName
+
+  SNSResourcePolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action:
+              - sns:Publish
+            Resource: !Ref RegistrationTopic
+      Topics: 
+        - !Ref RegistrationTopic
+
+  NotifyUserSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !Ref NotifyUserEmail
+      Protocol: email
+      TopicArn: !Ref RegistrationTopic
+  
+  # NotifyUserSubscription2:
+  #   Type: AWS::SNS::Subscription
+  #   Properties:
+  #     Endpoint: !Ref NotifyUserEmail2
+  #     Protocol: email
+  #     TopicArn: !Ref RegistrationTopic
 
   # SESIdentity:
   #   Type: AWS::SES::EmailIdentity
