@@ -1,4 +1,4 @@
-name: 'CICD - Infra - website-forms - PROD'
+name: 'CICD - Infra - website_forms - PROD'
 
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
@@ -12,6 +12,11 @@ on:
     paths:
       - 'infra/website-forms/**'
       - '!**/*.md'
+  workflow_run:
+    workflows:
+      - 'CICD - App - jamboree_register - PROD'
+    branches: [main]
+    types: [completed]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
