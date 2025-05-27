@@ -40,6 +40,9 @@ Parameters:
     Description: Value to use for the Version tag, using a "major.minor" notation.
     Type: String
 
+Conditions:
+  DeployApiFrontend: !Not [!Equals [!Ref TagEnv, prod]]
+
 Resources:
   IamCore:
     Type: AWS::CloudFormation::Stack
@@ -101,6 +104,7 @@ Resources:
 
   ApiFrontend:
     Type: AWS::CloudFormation::Stack
+    Condition: DeployApiFrontend
     Properties:
       Parameters:
         Env: !Ref TagEnv
