@@ -40,8 +40,8 @@ Parameters:
     Description: Value to use for the Version tag, using a "major.minor" notation.
     Type: String
 
-Conditions:
-  DeployApiFrontend: !Not [!Equals [!Ref TagEnv, prod]]
+# Conditions:
+#   DeployApiFrontend: !Not [!Equals [!Ref TagEnv, prod]]
 
 Resources:
   IamCore:
@@ -104,12 +104,12 @@ Resources:
 
   ApiFrontend:
     Type: AWS::CloudFormation::Stack
-    Condition: DeployApiFrontend
+    # Condition: DeployApiFrontend
     Properties:
       Parameters:
         Env: !Ref TagEnv
         NamePrefix: !Ref TagService
-        ApiGatewayExecutionRoleArn: !Sub "${TagService}-ApiFrontend"
+        ApiGatewayExecutionRoleArn: !GetAtt IamCore.Outputs.ApiGatewayInvokeEndpointExecutionRoleArn
         ApiGatewayName: !Sub "${TagService}-RegistrationApi"
         LambdaFunctionArn: !GetAtt RegistrationAction.Outputs.LambdaFunctionArn
         ApiGatewayLogGroup: !GetAtt IamCore.Outputs.ApiGatewayLogGroupName
