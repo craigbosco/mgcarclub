@@ -6,8 +6,43 @@
   <!-- Load the PayPal JS SDK -->
   <script src="https://www.paypal.com/sdk/js?client-id=AV3tPHQiTdXFl-AMQq_6Kd_5VvfnKOzSeMp1OCHfKafXBT_oQurHU_zhzrctGnIhCJOYoI-B40hYdvqw&currency=USD"></script>
   <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    #paymentForm {
+      padding: 30px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 15px;
+      font-weight: bold;
+      color: #333;
+    }
+    
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+      box-sizing: border-box;
+      margin-top: 5px;
+    }
+    
+    input:focus, textarea:focus, select:focus {
+      border-color: #4CAF50;
+      outline: none;
+    }
+    
     #paypal-button-container {
       transition: opacity 0.3s ease;
+      width: 100%;
+      margin-top: 20px;
     }
     
     .form-validation-message {
@@ -15,68 +50,76 @@
       font-size: 14px;
       margin-bottom: 10px;
       display: none;
+      text-align: center;
+      padding: 10px;
+      border-radius: 5px;
+      border-left: 4px solid #d32f2f;
     }
     
     .form-validation-message.show {
       display: block;
     }
+    
+    p {
+      padding: 15px;
+      border-radius: 5px;
+      border-left: 4px solid #ff9800;
+      line-height: 1.6;
+    }
+    
+    h1 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 30px;
+    }
   </style>
 </head>
 <body>
-
+  <h1>MG Jamboree 2025 Registration</h1>
+  
   <form id="paymentForm">
     <label>
       First Name:
       <input type="text" id="firstName" name="firstName" required>
     </label>
-    <br><br>
 
     <label>
       Last Name:
       <input type="text" id="lastName" name="lastName" required>
     </label>
-    <br><br>
 
     <label>
       Other Attendees (if applicable):
-      <br>
       <textarea id="attendees" name="attendees" rows="2" placeholder="First & Last Name"></textarea>
     </label>
-    <br><br>
 
     <label>
       Address:
-      <br>
       <textarea id="address" name="address" rows="4" placeholder="Street, City, State ZIP" required></textarea>
     </label>
-    <br><br>
 
     <label>
       Phone Number:
       <input type="tel" id="phone" name="phone" required>
     </label>
-    <br><br>
 
     <label>
       Email Address:
       <input type="email" id="email" name="email" required>
     </label>
-    <br><br>
+    
     <label>
       Year, Make, and Model:
       <input type="text" id="yearMakeModel" name="yearMakeModel" placeholder="e.g., 1965 MGB">
     </label>
-    <br><br>
 
     <p><strong>LIABILITY RELEASE:</strong><br>
     I AM AWARE of the hazards inherent with motor vehicle events & specifically release & so indemnify the organizers, supporting sponsors, & the Florida Suncoast MG Car Club collectively & separately, for any & all liability from personal injury or property damage incurred by me or my guest(s) while participating in the MG Jamboree. I understand & agree that The Florida Suncoast MG Car Club reserves the right to revoke my registration & retain my registration fee should I engage in reckless, dangerous and/or unsafe behavior. I (We) have read, understand, and agree to this release.</p>
 
     <label>
       Digital Signature (Type Your Full Name):
-      <br>
       <textarea id="signature" name="signature" rows="2" placeholder="Your typed name" required></textarea>
     </label>
-    <br><br>
 
     <label>
       Registration Type:
@@ -85,7 +128,6 @@
         <option value="boatTour">MG Jamboree and Pontoon Boat Tour</option>
       </select>
     </label>
-    <br><br>
 
     <label id="participantsLabel" style="display:none;">
       Number of Participants for Pontoon Tour:
@@ -96,7 +138,7 @@
       Amount (USD):
       <input type="number" id="amount" name="amount" step="0.01" min="0.01" readonly>
     </label>
-    <br><br>
+    
     <div id="validation-message" class="form-validation-message">
       Please fill out all required fields before proceeding with payment.
     </div>
