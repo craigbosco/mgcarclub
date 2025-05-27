@@ -50,7 +50,7 @@ Resources:
   ApiGatewayRestApi:
     Type: AWS::ApiGateway::RestApi
     Properties:
-      Name: !Sub ${NamePrefix}-${ApiGatewayName}
+      Name: !Sub '${ApiGatewayName}'
       Description: API to POST the registration
       ApiKeySourceType: HEADER
       MinimumCompressionSize: 0
