@@ -103,6 +103,7 @@ Resources:
     Properties:
       ResourceId: !Ref ProxyResource
       RestApiId: !Ref ApiGatewayRestApi
+      ApiKeyRequired: false
       AuthorizationType: NONE
       HttpMethod: OPTIONS
       MethodResponses:
