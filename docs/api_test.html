@@ -257,7 +257,7 @@
        const requestData = {
           ...formData,
           paymentDetails: 'test-payment-details', // Placeholder for payment details
-          test_mode: true // Indicate this is a test request
+          is_production: false // Indicate this is a test request
         };
         
         console.log('Sending test request to:', SERVER_URL);
