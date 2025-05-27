@@ -238,6 +238,7 @@
         }
         
         // Collect form data
+        const eventType = document.getElementById('eventType').value;
         const formData = {
           firstName: document.getElementById('firstName').value,
           lastName: document.getElementById('lastName').value,
@@ -247,8 +248,8 @@
           email: document.getElementById('email').value,
           yearMakeModel: document.getElementById('yearMakeModel').value,
           signature: document.getElementById('signature').value,
-          eventType: document.getElementById('eventType').value,
-          participants: document.getElementById('participants').value,
+          eventType: eventType,
+          participants: eventType === 'carShow' ? 0 : document.getElementById('participants').value,
           amount: document.getElementById('amount').value
         };
         

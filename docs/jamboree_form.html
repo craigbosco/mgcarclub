@@ -190,6 +190,7 @@
     
     // Function to collect all form data
     function collectFormData() {
+      const eventType = document.getElementById('eventType').value;
       return {
         firstName: document.getElementById('firstName').value.trim(),
         lastName: document.getElementById('lastName').value.trim(),
@@ -199,8 +200,8 @@
         email: document.getElementById('email').value.trim(),
         yearMakeModel: document.getElementById('yearMakeModel').value.trim(),
         signature: document.getElementById('signature').value.trim(),
-        eventType: document.getElementById('eventType').value,
-        participants: document.getElementById('participants').value,
+        eventType: eventType,
+        participants: eventType === 'carShow' ? 0 : document.getElementById('participants').value,
         amount: document.getElementById('amount').value,
         timestamp: new Date().toISOString(),
         paymentStatus: 'pending'
