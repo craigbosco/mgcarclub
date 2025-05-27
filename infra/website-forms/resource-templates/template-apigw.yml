@@ -171,6 +171,9 @@ Resources:
     Type: AWS::ApiGateway::UsagePlan
     DependsOn: ApiGatewayStage
     Properties:
+      Quota:
+        Limit: 100
+        Period: DAY
       ApiStages:
       - ApiId: !Ref ApiGatewayRestApi
         Stage: !Ref ApiStageName
