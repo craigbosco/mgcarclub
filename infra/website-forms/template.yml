@@ -15,10 +15,10 @@ Parameters:
   #   Default: "BCF"
   #   Description: Value to use for the Company-Code tag.
   #   Type: String
-  TagCostCenter:
-    Default: "tbd"
-    Description: Value to use for the Cost-Center tag.
-    Type: String
+  # TagCostCenter:
+  #   Default: "tbd"
+  #   Description: Value to use for the Cost-Center tag.
+  #   Type: String
   TagEnv:
     AllowedValues:
       - dev
@@ -66,8 +66,6 @@ Resources:
           Value: !Ref TagService
         - Key: version
           Value: !Ref TagVersion
-        - Key: cost-center
-          Value: !Ref TagCostCenter
       TemplateURL: ./resource-templates/template-iamcore.yml
 
   RegistrationAction:
