@@ -136,5 +136,4 @@ Resources:
 Outputs:
   ApiEndpoint:
     Description: "POST endpoint for registrations"
-    Value: TestOutput
-    # Value: !GetAtt ApiFrontend.Outputs.ApiEndpoint
+    Value: !GetAtt ApiFrontend.Outputs.ApiEndpoint
