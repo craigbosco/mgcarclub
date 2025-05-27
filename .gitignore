@@ -1,3 +1,6 @@
+# Project specific .gitignore file for Python projects
+secrets.js
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
