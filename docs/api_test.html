@@ -102,10 +102,78 @@
   </style>
 </head>
 <body>
-  <div class="container">
+<body>
+  <h1>API Test Form</h1>
+  
+  <form id="paymentForm">
+    <label>
+      First Name:
+      <input type="text" id="firstName" name="firstName" required>
+    </label>
+
+    <label>
+      Last Name:
+      <input type="text" id="lastName" name="lastName" required>
+    </label>
+
+    <label>
+      Other Attendees (if applicable):
+      <textarea id="attendees" name="attendees" rows="2" placeholder="First & Last Name"></textarea>
+    </label>
+
+    <label>
+      Address:
+      <textarea id="address" name="address" rows="4" placeholder="Street, City, State ZIP" required></textarea>
+    </label>
+
+    <label>
+      Phone Number:
+      <input type="tel" id="phone" name="phone" required>
+    </label>
+
+    <label>
+      Email Address:
+      <input type="email" id="email" name="email" required>
+    </label>
+    
+    <label>
+      Year, Make, and Model:
+      <input type="text" id="yearMakeModel" name="yearMakeModel" placeholder="e.g., 1965 MGB">
+    </label>
+
+    <p><strong>LIABILITY RELEASE:</strong><br>
+    I AM AWARE of the hazards inherent with motor vehicle events & specifically release & so indemnify the organizers, supporting sponsors, & the Florida Suncoast MG Car Club collectively & separately, for any & all liability from personal injury or property damage incurred by me or my guest(s) while participating in the MG Jamboree. I understand & agree that The Florida Suncoast MG Car Club reserves the right to revoke my registration & retain my registration fee should I engage in reckless, dangerous and/or unsafe behavior. I (We) have read, understand, and agree to this release.</p>
+
+    <label>
+      Digital Signature (Type Your Full Name):
+      <textarea id="signature" name="signature" rows="2" placeholder="Your typed name" required></textarea>
+    </label>
+
+    <label>
+      Registration Type:
+      <select id="eventType" name="eventType">
+        <option value="carShow">MG Jamboree 2025 Registration Only</option>
+        <option value="boatTour">MG Jamboree and Pontoon Boat Tour</option>
+      </select>
+    </label>
+
+    <label id="participantsLabel" style="display:none;">
+      Number of Participants for Pontoon Tour:
+      <input type="number" id="participants" name="participants" min="1" value="1">
+    </label>
+
+    <label>
+      Amount (USD):
+      <input type="number" id="amount" name="amount" step="0.01" min="0.01" readonly>
+    </label>
+    
+    <div id="validation-message" class="form-validation-message">
+      Please fill out all required fields before proceeding with payment.
+    
+    <div class="container">
     <h1>API Test Form</h1>
     
-    <p>This form will send an empty JSON payload to the MG Jamboree registration API endpoint to test connectivity and response.</p>
+    <p>This form will send a JSON payload to the MG Jamboree registration API endpoint to test connectivity and response.</p>
     
     <button id="testButton" onclick="testAPI()">Test API Call</button>
     
@@ -113,6 +181,7 @@
       <h3 id="responseTitle"></h3>
       <pre id="responseBody"></pre>
     </div>
+  </form>
   </div>
 
   <script>
@@ -142,11 +211,27 @@
           throw new Error('API key not configured - make sure secrets.js is loaded and configured');
         }
         
-        // Empty JSON payload for testing
+        // Collect form data
+        const formData = {
+          firstName: document.getElementById('firstName').value,
+          lastName: document.getElementById('lastName').value,
+          attendees: document.getElementById('attendees').value,
+          address: document.getElementById('address').value,
+          phone: document.getElementById('phone').value,
+          email: document.getElementById('email').value,
+          yearMakeModel: document.getElementById('yearMakeModel').value,
+          signature: document.getElementById('signature').value,
+          eventType: document.getElementById('eventType').value,
+          participants: document.getElementById('participants').value,
+          amount: document.getElementById('amount').value
+        };
+        
+        // Create test payload with form data
         const testPayload = {
           test: true,
           timestamp: new Date().toISOString(),
-          message: 'API connectivity test'
+          message: 'API connectivity test with form data',
+          formData: formData
         };
         
         console.log('Sending test request to:', SERVER_URL);
