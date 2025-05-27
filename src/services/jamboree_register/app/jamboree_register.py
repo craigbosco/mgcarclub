@@ -46,7 +46,7 @@ def lambda_handler(event, context):
     # SNS = SnsWrapper(sns)
 
     # Parse & validate
-    body = json.loads(event.get('body','{}'))
+    body = json.loads(event)
     
     # Extract required fields
     firstName = body.get('firstName')
