@@ -25,6 +25,14 @@ Parameters:
     Default: craigbosco@mac.com
     Type: String
     Description: Email address to notify user upon registration
+  NotifyUserEmail2:
+    Default: gail@glennsmg.com
+    Type: String
+    Description: Email address to notify user upon registration
+  NotifyUserEmail3:
+    Default: spicerlor@gmail.com
+    Type: String
+    Description: Email address to notify user upon registration
   NamePrefix:
     Type: String
     Description: Name prefix for all resources
@@ -84,12 +92,19 @@ Resources:
       Protocol: email
       TopicArn: !Ref RegistrationTopic
   
-  # NotifyUserSubscription2:
-  #   Type: AWS::SNS::Subscription
-  #   Properties:
-  #     Endpoint: !Ref NotifyUserEmail2
-  #     Protocol: email
-  #     TopicArn: !Ref RegistrationTopic
+  NotifyUserSubscription2:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !Ref NotifyUserEmail2
+      Protocol: email
+      TopicArn: !Ref RegistrationTopic
+
+  NotifyUserSubscription3:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: !Ref NotifyUserEmail3
+      Protocol: email
+      TopicArn: !Ref RegistrationTopic
 
   # SESIdentity:
   #   Type: AWS::SES::EmailIdentity
