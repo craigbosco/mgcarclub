@@ -12,11 +12,12 @@ on:
     paths:
       - 'infra/website-forms/**'
       - '!**/*.md'
-  workflow_run:
-    workflows:
-      - 'CICD - App - jamboree_register - PROD'
-    branches: [main]
-    types: [completed]
+  # For some reason, the deploy step does not trigger on workflow_run
+  # workflow_run:
+  #   workflows:
+  #     - 'CICD - App - jamboree_register - PROD'
+  #   branches: [main]
+  #   types: [completed]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
