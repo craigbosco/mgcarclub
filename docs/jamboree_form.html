@@ -41,6 +41,46 @@
       outline: none;
     }
     
+    /* Radio button styling for embedding compatibility */
+    .radio-group {
+      margin-top: 10px;
+    }
+    
+    .radio-option {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 10px;
+      border: 2px solid #ddd;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: transparent;
+    }
+    
+    .radio-option:hover {
+      border-color: #4CAF50;
+      background-color: rgba(76, 175, 80, 0.05);
+    }
+    
+    .radio-option input[type="radio"] {
+      width: auto;
+      margin: 0 10px 0 0;
+      padding: 0;
+    }
+    
+    .radio-option.selected {
+      border-color: #4CAF50;
+      background-color: rgba(76, 175, 80, 0.1);
+    }
+    
+    .radio-option label {
+      margin: 0;
+      font-weight: normal;
+      cursor: pointer;
+      flex: 1;
+    }
+    
     #paypal-button-container {
       transition: opacity 0.3s ease;
       width: 100%;
@@ -161,10 +201,16 @@
 
     <label>
       Registration Type:
-      <select id="eventType" name="eventType">
-        <option value="carShow">MG Jamboree 2025 Registration Only</option>
-        <option value="boatTour">MG Jamboree and Pontoon Boat Tour</option>
-      </select>
+      <div class="radio-group">
+        <div class="radio-option">
+          <input type="radio" id="carShow" name="eventType" value="carShow" checked>
+          <label for="carShow">MG Jamboree 2025 Registration Only</label>
+        </div>
+        <div class="radio-option">
+          <input type="radio" id="boatTour" name="eventType" value="boatTour">
+          <label for="boatTour">MG Jamboree and Pontoon Boat Tour</label>
+        </div>
+      </div>
     </label>
 
     <label id="participantsLabel" style="display:none;">
@@ -174,7 +220,7 @@
 
     <label>
       Amount (USD):
-      <input type="number" id="amount" name="amount" step="0.01" min="0.01" readonly>
+      <input type="text" id="amount" name="amount" readonly style="background-color: #f5f5f5; cursor: not-allowed;">
     </label>
     
     <div id="validation-message" class="form-validation-message">
@@ -190,7 +236,7 @@
     
     // Function to collect all form data
     function collectFormData() {
-      const eventType = document.getElementById('eventType').value;
+      const eventType = document.querySelector('input[name="eventType"]:checked').value;
       return {
         firstName: document.getElementById('firstName').value.trim(),
         lastName: document.getElementById('lastName').value.trim(),
@@ -245,14 +291,15 @@
     }
 
     function updateAmount() {
-      var eventType = document.getElementById('eventType').value;
+      var eventTypeRadio = document.querySelector('input[name="eventType"]:checked');
+      var eventType = eventTypeRadio ? eventTypeRadio.value : 'carShow';
       var now = new Date();
-      var cutoffCar = new Date('2025-09-01');
+      var cutoffDate = new Date('2025-09-01');
       var registrationFee = 0;
       var pontoonFee = 0;
       
-      // Registration fee is always required
-      registrationFee = now < cutoffCar ? 25 : 35;
+      // Registration fee is always required - $25 before 9/1/2025, $35 after
+      registrationFee = now < cutoffDate ? 25 : 35;
       
       if (eventType === 'carShow') {
         // Car show only - just registration fee
@@ -269,6 +316,9 @@
       // Add 5% processing fee
       totalAmount = totalAmount * 1.05;
       document.getElementById('amount').value = totalAmount.toFixed(2);
+      
+      // Update radio button styling
+      updateRadioStyling();
       
       // Check form validation after amount update
       checkFormValidity();
@@ -301,6 +351,19 @@
       }
     }
 
+    function updateRadioStyling() {
+      // Update radio button visual styling
+      var radioOptions = document.querySelectorAll('.radio-option');
+      radioOptions.forEach(function(option) {
+        var radio = option.querySelector('input[type="radio"]');
+        if (radio.checked) {
+          option.classList.add('selected');
+        } else {
+          option.classList.remove('selected');
+        }
+      });
+    }
+
     // Add event listeners to all required fields for real-time validation
     document.getElementById('firstName').addEventListener('input', checkFormValidity);
     document.getElementById('lastName').addEventListener('input', checkFormValidity);
@@ -309,11 +372,24 @@
     document.getElementById('email').addEventListener('input', checkFormValidity);
     document.getElementById('signature').addEventListener('input', checkFormValidity);
 
-    document.getElementById('eventType').addEventListener('change', updateAmount);
+    // Update event listeners for radio buttons
+    document.querySelectorAll('input[name="eventType"]').forEach(function(radio) {
+      radio.addEventListener('change', updateAmount);
+    });
     document.getElementById('participants').addEventListener('input', updateAmount);
+    
     window.addEventListener('load', function() {
       updateAmount();
       checkFormValidity();
+      
+      // Add click handlers to radio option divs for better UX
+      document.querySelectorAll('.radio-option').forEach(function(option) {
+        option.addEventListener('click', function() {
+          var radio = this.querySelector('input[type="radio"]');
+          radio.checked = true;
+          updateAmount();
+        });
+      });
     });
 
     // Wait until the SDK is loaded
