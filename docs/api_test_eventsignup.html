@@ -188,6 +188,8 @@
       
       <button type="button" id="corsTestButton" onclick="testCORS()" style="background-color: #ff9800; margin-top: 10px;">Test CORS (OPTIONS Request)</button>
       
+      <button type="button" id="registerTestButton" onclick="testRegisterEndpoint()" style="background-color: #2196F3; margin-top: 10px;">Test Original /register Endpoint</button>
+      
       <div id="responseContainer" class="response-container">
         <h3 id="responseTitle"></h3>
         <pre id="responseBody"></pre>
@@ -279,6 +281,14 @@
         } else {
           responseContainer.className = 'response-container response-error';
           responseTitle.textContent = `❌ Error (Status: ${response.status})`;
+          
+          // Log additional error details for debugging
+          console.error('HTTP Error Details:', {
+            status: response.status,
+            statusText: response.statusText,
+            headers: Object.fromEntries(response.headers.entries()),
+            url: response.url
+          });
         }
         
         // Show response details
@@ -286,7 +296,8 @@
           status: response.status,
           statusText: response.statusText,
           headers: Object.fromEntries(response.headers.entries()),
-          body: responseData
+          body: responseData,
+          requestPayload: formData // Include the request payload for debugging
         };
         
         responseBody.textContent = JSON.stringify(responseDetails, null, 2);
@@ -312,14 +323,34 @@ Current domain: ${window.location.origin}
 Target API: ${SERVER_URL}
 
 DEBUGGING STEPS:
-1. Try the CORS test button first
+1. Try the CORS test button first ✅ (Working)
 2. Check if the original /register endpoint works
 3. Verify the API Gateway deployment includes the new eventsignup resource
-4. Check CloudWatch logs for API Gateway
+4. Check CloudWatch logs for API Gateway and Lambda function
+5. Verify the EventSignupFunction Lambda exists and is properly configured
+
+Since CORS preflight is working but returning null headers, this suggests:
+- The API Gateway resource exists
+- The OPTIONS method is configured
+- But the CORS headers might not be properly set in the integration response
+- OR the Lambda function is throwing an error (500 status)
 
 Original /register endpoint: https://lbdbikz3d1.execute-api.us-east-1.amazonaws.com/v1/register
 
 Check browser console for more details.`;
+        } else if (error.message.includes('500')) {
+          errorMessage += `This is a 500 Internal Server Error, which means:
+1. The API Gateway is reachable
+2. The request passed CORS preflight
+3. But the Lambda function is throwing an error
+
+Common causes:
+- Lambda function doesn't exist or isn't deployed
+- Lambda execution role doesn't have proper permissions
+- Lambda function code has a runtime error
+- Environment variables not set correctly
+
+Check AWS CloudWatch logs for the Lambda function for detailed error messages.`;
         } else {
           errorMessage += `Stack trace:\n${error.stack}`;
         }
@@ -395,6 +426,108 @@ Check browser console for more details.`;
         // Re-enable button
         button.disabled = false;
         button.innerHTML = 'Test CORS (OPTIONS Request)';
+      }
+    }
+    
+    // Test the original register endpoint for comparison
+    async function testRegisterEndpoint() {
+      const button = document.getElementById('registerTestButton');
+      const responseContainer = document.getElementById('responseContainer');
+      const responseTitle = document.getElementById('responseTitle');
+      const responseBody = document.getElementById('responseBody');
+      
+      // Disable button and show loading state
+      button.disabled = true;
+      button.innerHTML = '<div class="spinner"></div>Testing /register...';
+      
+      // Show loading response
+      responseContainer.className = 'response-container response-loading';
+      responseContainer.style.display = 'block';
+      responseTitle.textContent = 'Testing Original /register Endpoint...';
+      responseBody.textContent = 'Sending request to original jamboree registration endpoint...';
+      
+      try {
+        // Get API key from secrets
+        const apiKey = window.SecretsConfig?.getApiKey();
+        if (!apiKey) {
+          throw new Error('API key not configured');
+        }
+        
+        const registerURL = 'https://lbdbikz3d1.execute-api.us-east-1.amazonaws.com/v1/register';
+        
+        // Create jamboree-style payload
+        const jamboreeData = {
+          firstName: document.getElementById('firstName').value,
+          lastName: document.getElementById('lastName').value,
+          email: document.getElementById('email').value,
+          attendees: 'Test Other Attendees',
+          address: '123 Test St, Test City, FL 12345',
+          phone: '555-123-4567',
+          yearMakeModel: '1965 MGB Test',
+          signature: document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value,
+          eventType: 'carShow',
+          participants: 0,
+          amount: document.getElementById('amount').value,
+          paymentDetails: {
+            testPayment: true,
+            paypalOrderId: 'test-order-123'
+          },
+          is_production: false
+        };
+        
+        console.log('Testing original /register endpoint:', registerURL);
+        console.log('Jamboree payload:', jamboreeData);
+        
+        const response = await fetch(registerURL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey
+          },
+          body: JSON.stringify(jamboreeData)
+        });
+        
+        // Get response text/json
+        let responseData;
+        const responseText = await response.text();
+        
+        try {
+          responseData = JSON.parse(responseText);
+        } catch (e) {
+          responseData = responseText;
+        }
+        
+        // Display results
+        if (response.ok) {
+          responseContainer.className = 'response-container response-success';
+          responseTitle.textContent = `✅ Original /register Success (Status: ${response.status})`;
+        } else {
+          responseContainer.className = 'response-container response-error';
+          responseTitle.textContent = `❌ Original /register Error (Status: ${response.status})`;
+        }
+        
+        // Show response details
+        const responseDetails = {
+          endpoint: '/register',
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          body: responseData
+        };
+        
+        responseBody.textContent = JSON.stringify(responseDetails, null, 2);
+        
+      } catch (error) {
+        console.error('Register endpoint test error:', error);
+        
+        responseContainer.className = 'response-container response-error';
+        responseTitle.textContent = '❌ Register Endpoint Test Failed';
+        responseBody.textContent = `Error: ${error.message}`;
+      } finally {
+        // Re-enable button
+        button.disabled = false;
+        button.innerHTML = 'Test Original /register Endpoint';
       }
     }
     
