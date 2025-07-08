@@ -243,9 +243,14 @@
         
         console.log('Sending test request to:', SERVER_URL);
         console.log('Test payload:', formData);
+        console.log('Request headers:', {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey ? 'API_KEY_PRESENT' : 'API_KEY_MISSING'
+        });
         
         const response = await fetch(SERVER_URL, {
           method: 'POST',
+          mode: 'cors', // Explicitly set CORS mode
           headers: {
             'Content-Type': 'application/json',
             'x-api-key': apiKey
@@ -287,7 +292,26 @@
         
         responseContainer.className = 'response-container response-error';
         responseTitle.textContent = '❌ Network/Connection Error';
-        responseBody.textContent = `Error: ${error.message}\n\nStack trace:\n${error.stack}`;
+        
+        // Provide more detailed error information
+        let errorMessage = `Error: ${error.message}\n\n`;
+        
+        if (error.message === 'Failed to fetch') {
+          errorMessage += `Possible causes:
+1. CORS (Cross-Origin) issue - The API may not allow requests from craigbosco.github.io
+2. Network connectivity issue
+3. API endpoint is not responding
+4. SSL/TLS certificate issue
+
+Current domain: ${window.location.origin}
+Target API: ${SERVER_URL}
+
+Check browser console for more details.`;
+        } else {
+          errorMessage += `Stack trace:\n${error.stack}`;
+        }
+        
+        responseBody.textContent = errorMessage;
       } finally {
         // Re-enable button
         button.disabled = false;
