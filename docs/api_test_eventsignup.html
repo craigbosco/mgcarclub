@@ -144,7 +144,9 @@
     <div class="pricing-info">
       <h3>Test Configuration</h3>
       <p>This form will test the event signup API endpoint with simplified data structure.<br>
-      <strong>Endpoint:</strong> /v1/eventsignup</p>
+      <strong>Endpoint:</strong> /v1/eventsignup<br>
+      <strong>Current Domain:</strong> <span id="currentDomain"></span><br>
+      <strong>API Key Status:</strong> <span id="apiKeyStatus">Checking...</span></p>
     </div>
     
     <form id="testForm">
@@ -345,8 +347,16 @@ Check browser console for more details.`;
     window.addEventListener('load', function() {
       updateAmount(); // Calculate initial amount
       
+      // Show current domain
+      document.getElementById('currentDomain').textContent = window.location.origin;
+      
       const apiKey = window.SecretsConfig?.getApiKey();
+      const apiKeyStatus = document.getElementById('apiKeyStatus');
+      
       if (!apiKey) {
+        apiKeyStatus.textContent = '❌ Not Found';
+        apiKeyStatus.style.color = '#d32f2f';
+        
         const responseContainer = document.getElementById('responseContainer');
         const responseTitle = document.getElementById('responseTitle');
         const responseBody = document.getElementById('responseBody');
@@ -355,6 +365,9 @@ Check browser console for more details.`;
         responseContainer.style.display = 'block';
         responseTitle.textContent = '⚠️ Configuration Warning';
         responseBody.textContent = 'API key not found. Make sure secrets.js is properly configured.';
+      } else {
+        apiKeyStatus.textContent = '✅ Found';
+        apiKeyStatus.style.color = '#155724';
       }
     });
   </script>
