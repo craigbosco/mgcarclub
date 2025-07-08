@@ -5,6 +5,9 @@ Parameters:
   DeploymentBucket:
     Type: String
     Description: S3 bucket name for deployment assets.
+  EventSignupLambdaFunctionPackageKey:
+    Type: AWS::SSM::Parameter::Value<String>
+    Description: Name of the SSM Parameter containing the Generic Lambda function package S3 key.
   LambdaFunctionPackageKey:
     Type: AWS::SSM::Parameter::Value<String>
     Description: Name of the SSM Parameter containing the Lambda function package S3 key.
@@ -77,6 +80,8 @@ Resources:
       Parameters:
         DeploymentBucket: !Ref DeploymentBucket
         # Env: !Ref TagEnv
+        EventSignupLambdaFunctionPackageKey: !Ref EventSignupLambdaFunctionPackageKey
+        EventSignupLambdaFunctionName: !Sub "${TagService}-EventSignupLambda"
         LambdaFunctionPackageKey: !Ref LambdaFunctionPackageKey
         LambdaRegistrationFunctionName: !Sub "${TagService}-RegistrationLambda"
         LambdaRegistrationExecutionRoleName: !GetAtt IamCore.Outputs.LambdaRegistrationExecutionRoleName
@@ -107,16 +112,17 @@ Resources:
     # Condition: DeployApiFrontend
     Properties:
       Parameters:
-        Env: !Ref TagEnv
-        NamePrefix: !Ref TagService
         ApiGatewayExecutionRoleArn: !GetAtt IamCore.Outputs.ApiGatewayInvokeEndpointExecutionRoleArn
         ApiGatewayName: !Sub "${TagService}-RegistrationApi"
-        LambdaFunctionArn: !GetAtt RegistrationAction.Outputs.LambdaFunctionArn
         ApiGatewayLogGroup: !GetAtt IamCore.Outputs.ApiGatewayLogGroupArn
         ApiGatewayLoggingLevel: INFO
         ApiGatewayMetricsEnabled: true
         ApiStageName: v1
         ApiMethodName: register
+        Env: !Ref TagEnv
+        EventSignupLambdaFunctionArn: !GetAtt RegistrationAction.Outputs.EventSignupLambdaFunctionArn
+        LambdaFunctionArn: !GetAtt RegistrationAction.Outputs.LambdaFunctionArn
+        NamePrefix: !Ref TagService
         # WAFWebACL: !Ref WAFWebACL
       Tags:
         - Key: env

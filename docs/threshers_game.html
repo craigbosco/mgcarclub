@@ -184,7 +184,7 @@
 
   <script>
     // Server configuration
-    const SERVER_URL = 'https://lbdbikz3d1.execute-api.us-east-1.amazonaws.com/v1/register';
+    const SERVER_URL = 'https://lbdbikz3d1.execute-api.us-east-1.amazonaws.com/v1/eventsignup';
     
     // Function to collect all form data
     function collectFormData() {
@@ -194,6 +194,7 @@
         email: document.getElementById('email').value.trim(),
         attendees: document.getElementById('attendees').value,
         amount: document.getElementById('amount').value,
+        registrationType: 'threshersgame2025',
         timestamp: new Date().toISOString(),
         paymentStatus: 'pending'
       };

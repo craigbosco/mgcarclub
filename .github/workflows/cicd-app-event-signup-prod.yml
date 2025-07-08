@@ -1,0 +1,51 @@
+name: 'CICD - App - event_signup - PROD'
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'src/services/event_signup/**'
+      - '!**/*.md'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  FUNCTION_PATH: src/services
+  FUNCTION_NAME: event_signup
+  FUNCTION_PYTHON_VERSION: '3.12'
+  FUNCTION_NS: bosco-cloud-foundation
+
+jobs:
+  package:
+    name: Package and Upload
+    environment: prod
+    permissions:
+      id-token: write
+      actions: write
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - id: checkout_code
+        name: Checkout
+        uses: actions/checkout@v3
+
+      - id: aws-configure
+        name: AWS Configure
+        uses: aws-actions/configure-aws-credentials@v4.1.0
+        with:
+          aws-region: us-east-1
+          role-to-assume: ${{ secrets.GH_IAM_ROLE }}
+          role-session-name: GitHubActionsSession-${{ github.run_id }}
+
+      - id: package-lambda
+        name: Package Lambda Function
+        uses: ./.github/actions/lambda-publish-python
+        with:
+          artifacts-bucket: '${{ secrets.GH_ACTIONS_BUCKET }}'
+          # artifacts-bucket-cmk: '${{ secrets.GH_ACTIONS_BUCKET_CMK }}'
+          environment: prod
+          function-path: '${{ env.FUNCTION_PATH }}'
+          function-name: '${{ env.FUNCTION_NAME }}'
+          function-namespace: '${{ env.FUNCTION_NS }}'
+          python-version: '${{ env.FUNCTION_PYTHON_VERSION }}'

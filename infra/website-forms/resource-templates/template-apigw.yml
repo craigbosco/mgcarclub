@@ -11,6 +11,9 @@ Parameters:
   LambdaFunctionArn: 
     Type: String
     Description: Lambda function ARN to invoke
+  EventSignupLambdaFunctionArn:
+    Type: String
+    Description: A secondary Lambda function that can post multiple different registration types
   ApiGatewayExecutionRoleArn:
     Type: String
     Description: API Gateway execution role ARN
@@ -67,6 +70,13 @@ Resources:
       RestApiId: !Ref ApiGatewayRestApi
       ParentId: !GetAtt ApiGatewayRestApi.RootResourceId
       PathPart: !Ref ApiMethodName
+
+  EventSignupResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref ApiGatewayRestApi
+      ParentId: !GetAtt ApiGatewayRestApi.RootResourceId
+      PathPart: "eventsignup"
 
   ProxyResourceANY:
     Type: AWS::ApiGateway::Method
@@ -126,11 +136,70 @@ Resources:
         RequestTemplates:
           application/json: '{"statusCode": 200}'
 
+  EventSignupResourcePOST:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ResourceId: !Ref EventSignupResource
+      RestApiId: !Ref ApiGatewayRestApi
+      AuthorizationType: NONE
+      HttpMethod: POST
+      ApiKeyRequired: true
+      OperationName: "eventsignup"
+      MethodResponses:
+        - StatusCode: "200"
+          ResponseModels: { "application/json": "Empty" }
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+      Integration:
+        IntegrationHttpMethod: POST
+        Type: AWS
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${EventSignupLambdaFunctionArn}/invocations
+        Credentials: !Ref ApiGatewayExecutionRoleArn
+        PassthroughBehavior: WHEN_NO_MATCH
+        IntegrationResponses:
+          - StatusCode: "200"
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'https://craigbosco.github.io'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+
+  EventSignupResourceOPTIONS:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      ResourceId: !Ref EventSignupResource
+      RestApiId: !Ref ApiGatewayRestApi
+      ApiKeyRequired: false
+      AuthorizationType: NONE
+      HttpMethod: OPTIONS
+      MethodResponses:
+        - StatusCode: "200"
+          ResponseModels: { "application/json": "Empty" }
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Origin: true
+            method.response.header.Access-Control-Allow-Headers: true
+            method.response.header.Access-Control-Allow-Methods: true
+      Integration:
+        Type: MOCK
+        IntegrationResponses:
+          - StatusCode: "200"
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'https://craigbosco.github.io'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+            ResponseTemplates:
+              application/json: "{}"
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+
   ApiGatewayDeployment:
     Type: AWS::ApiGateway::Deployment
     DependsOn: 
       - ProxyResourceANY
       - ProxyResourceOPTIONS
+      - EventSignupResourcePOST
+      - EventSignupResourceOPTIONS
     Properties:
       Description: API Deployment
       RestApiId: !Ref ApiGatewayRestApi
@@ -190,5 +259,7 @@ Resources:
 Outputs:
   apiGatewayInvokeURL:
     Value: !Sub https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiStageName}/${ApiMethodName}
+  eventSignupInvokeURL:
+    Value: !Sub https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${ApiStageName}/eventsignup
   ApiKeyId:
     Value: !Ref ApiKey

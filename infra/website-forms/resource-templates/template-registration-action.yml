@@ -5,6 +5,12 @@ Parameters:
   DeploymentBucket:
     Type: String
     Description: S3 bucket name for deployment assets.
+  EventSignupLambdaFunctionPackageKey:
+    Type: String
+    Description: S3 key for the Lambda function package.
+  EventSignupLambdaFunctionName:
+    Type: String
+    Description: The name of the Lambda function
   LambdaFunctionPackageKey:
     Type: String
     Description: S3 key for the Lambda function package.
@@ -57,6 +63,18 @@ Resources:
     Type: AWS::DynamoDB::Table
     Properties:
       TableName: RegistrationTable
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+
+  EventSignupTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: EventSignupTable
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: id
@@ -128,6 +146,23 @@ Resources:
           TABLE_NAME: !Ref RegistrationTable
           SNS_TOPIC_ARN: !Ref RegistrationTopic
           SES_SOURCE_EMAIL: "Test"
+
+  EventSignupFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Ref DeploymentBucket
+        S3Key: !Ref EventSignupLambdaFunctionPackageKey
+      Handler: app.event_signup.lambda_handler
+      FunctionName: !Ref EventSignupLambdaFunctionName
+      Runtime: python3.12
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/${LambdaRegistrationExecutionRoleName}"
+      Timeout: 30
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref EventSignupTable
+          SNS_TOPIC_ARN: !Ref RegistrationTopic
+          SES_SOURCE_EMAIL: "Test"
       
 
   LambdaDynamoExecutionPolicy:
@@ -144,6 +179,11 @@ Resources:
             Action:
               - dynamodb:PutItem
             Resource: !GetAtt RegistrationTable.Arn
+        -
+            Effect: Allow
+            Action:
+              - dynamodb:PutItem
+            Resource: !GetAtt EventSignupTable.Arn
         - 
             Effect: Allow
             Action:
@@ -160,3 +200,6 @@ Outputs:
   LambdaFunctionArn:
     Description: ARN of the Lambda function
     Value: !GetAtt RegistrationFunction.Arn
+  EventSignupLambdaFunctionArn:
+    Description: ARN of the Generic Event Registration Function
+    Value: !GetAtt EventSignupFunction.Arn
