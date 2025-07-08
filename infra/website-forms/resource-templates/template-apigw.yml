@@ -143,6 +143,11 @@ Resources:
               method.response.header.Access-Control-Allow-Origin: "'https://craigbosco.github.io'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
               method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+          - StatusCode: "500"
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'https://craigbosco.github.io'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
 
   ProxyResourceOPTIONS:
     Type: AWS::ApiGateway::Method
@@ -232,6 +237,11 @@ Resources:
               method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
           - StatusCode: "500"
             SelectionPattern: "5\\d{2}"
+            ResponseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'https://craigbosco.github.io'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+          - StatusCode: "500"
             ResponseParameters:
               method.response.header.Access-Control-Allow-Origin: "'https://craigbosco.github.io'"
               method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
