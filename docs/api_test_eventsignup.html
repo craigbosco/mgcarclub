@@ -186,6 +186,8 @@
       
       <button type="button" id="testButton" onclick="testAPI()">Test Event Signup API</button>
       
+      <button type="button" id="corsTestButton" onclick="testCORS()" style="background-color: #ff9800; margin-top: 10px;">Test CORS (OPTIONS Request)</button>
+      
       <div id="responseContainer" class="response-container">
         <h3 id="responseTitle"></h3>
         <pre id="responseBody"></pre>
@@ -304,9 +306,18 @@
 2. Network connectivity issue
 3. API endpoint is not responding
 4. SSL/TLS certificate issue
+5. The /eventsignup endpoint may not be deployed yet
 
 Current domain: ${window.location.origin}
 Target API: ${SERVER_URL}
+
+DEBUGGING STEPS:
+1. Try the CORS test button first
+2. Check if the original /register endpoint works
+3. Verify the API Gateway deployment includes the new eventsignup resource
+4. Check CloudWatch logs for API Gateway
+
+Original /register endpoint: https://lbdbikz3d1.execute-api.us-east-1.amazonaws.com/v1/register
 
 Check browser console for more details.`;
         } else {
@@ -318,6 +329,72 @@ Check browser console for more details.`;
         // Re-enable button
         button.disabled = false;
         button.innerHTML = 'Test Event Signup API Again';
+      }
+    }
+    
+    // Test CORS preflight
+    async function testCORS() {
+      const button = document.getElementById('corsTestButton');
+      const responseContainer = document.getElementById('responseContainer');
+      const responseTitle = document.getElementById('responseTitle');
+      const responseBody = document.getElementById('responseBody');
+      
+      // Disable button and show loading state
+      button.disabled = true;
+      button.innerHTML = '<div class="spinner"></div>Testing CORS...';
+      
+      // Show loading response
+      responseContainer.className = 'response-container response-loading';
+      responseContainer.style.display = 'block';
+      responseTitle.textContent = 'Testing CORS Preflight...';
+      responseBody.textContent = 'Sending OPTIONS request to check CORS configuration...';
+      
+      try {
+        console.log('Testing CORS preflight for:', SERVER_URL);
+        
+        const response = await fetch(SERVER_URL, {
+          method: 'OPTIONS',
+          mode: 'cors',
+          headers: {
+            'Origin': window.location.origin,
+            'Access-Control-Request-Method': 'POST',
+            'Access-Control-Request-Headers': 'Content-Type,x-api-key'
+          }
+        });
+        
+        // Display results
+        if (response.ok) {
+          responseContainer.className = 'response-container response-success';
+          responseTitle.textContent = `✅ CORS Preflight Success (Status: ${response.status})`;
+        } else {
+          responseContainer.className = 'response-container response-error';
+          responseTitle.textContent = `❌ CORS Preflight Failed (Status: ${response.status})`;
+        }
+        
+        // Show response details
+        const responseDetails = {
+          status: response.status,
+          statusText: response.statusText,
+          headers: Object.fromEntries(response.headers.entries()),
+          corsHeaders: {
+            'access-control-allow-origin': response.headers.get('access-control-allow-origin'),
+            'access-control-allow-methods': response.headers.get('access-control-allow-methods'),
+            'access-control-allow-headers': response.headers.get('access-control-allow-headers')
+          }
+        };
+        
+        responseBody.textContent = JSON.stringify(responseDetails, null, 2);
+        
+      } catch (error) {
+        console.error('CORS test error:', error);
+        
+        responseContainer.className = 'response-container response-error';
+        responseTitle.textContent = '❌ CORS Test Failed';
+        responseBody.textContent = `Error: ${error.message}\n\nThis likely means the OPTIONS endpoint is not configured or accessible.`;
+      } finally {
+        // Re-enable button
+        button.disabled = false;
+        button.innerHTML = 'Test CORS (OPTIONS Request)';
       }
     }
     

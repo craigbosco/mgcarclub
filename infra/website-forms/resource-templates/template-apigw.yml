@@ -6,7 +6,7 @@ Parameters:
     Type: String
     Description: Environment
   NamePrefix:
-    Type: String
+    Type: String 
     Description: Name prefix for all resources
   LambdaFunctionArn: 
     Type: String
